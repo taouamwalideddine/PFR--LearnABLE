@@ -4,6 +4,7 @@ const helmet = require('helmet');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const childRoutes = require('./routes/childRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/children', childRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'LearnAble API is running' });
