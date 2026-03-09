@@ -85,9 +85,9 @@ const Dashboard = () => {
                             </div>
                         </div>
                         <div className="bg-gray-50 px-5 py-3 text-sm">
-                            <span className="text-purple-700 font-medium hover:text-purple-900 cursor-pointer">
-                                View reports
-                            </span>
+                            <Link to="/children" className="text-purple-700 font-medium hover:text-purple-900 cursor-pointer flex items-center">
+                                Select child to view reports
+                            </Link>
                         </div>
                     </div>
                 </div>

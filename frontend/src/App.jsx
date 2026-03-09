@@ -9,6 +9,7 @@ import ChildProfiles from './pages/ChildProfiles';
 import LessonList from './pages/LessonList';
 import LessonForm from './pages/LessonForm';
 import LessonDetail from './pages/LessonDetail';
+import ProgressDashboard from './pages/ProgressDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -57,6 +58,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
                   <LessonDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress/:childId"
+              element={
+                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
+                  <ProgressDashboard />
                 </ProtectedRoute>
               }
             />
