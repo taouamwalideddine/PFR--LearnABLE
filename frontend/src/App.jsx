@@ -6,6 +6,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ChildProfiles from './pages/ChildProfiles';
+import LessonList from './pages/LessonList';
+import LessonForm from './pages/LessonForm';
+import LessonDetail from './pages/LessonDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -30,6 +33,30 @@ function App() {
               element={
                 <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
                   <ChildProfiles />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lessons"
+              element={
+                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN']}>
+                  <LessonList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lessons/new"
+              element={
+                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN']}>
+                  <LessonForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lessons/:id"
+              element={
+                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
+                  <LessonDetail />
                 </ProtectedRoute>
               }
             />
