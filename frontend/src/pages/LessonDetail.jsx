@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
-import { ArrowLeft, Plus, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, CheckCircle, Clock, Play, X } from 'lucide-react';
+import ActivityEngine from '../components/activities/ActivityEngine';
 
 const LessonDetail = () => {
     const { id } = useParams();
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activeActivity, setActiveActivity] = useState(null);
 
     useEffect(() => {
         fetchLessonDetails();
@@ -72,15 +74,22 @@ const LessonDetail = () => {
                                     <div>
                                         <h3 className="text-lg font-bold text-gray-900">{activity.title}</h3>
                                         <div className="flex items-center text-sm text-gray-500 mt-1">
-                                            <span className="px-2 py-0.5 rounded text-xs bg-gray-100 mr-3">{activity.type}</span>
+                                            <span className="px-2 py-0.5 rounded text-xs bg-gray-100 mr-3">{activity.type.replace('_', ' ')}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex space-x-3">
-                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1.5 border border-blue-200 rounded-md bg-blue-50">
+                                <div className="flex space-x-3 items-center">
+                                    <button
+                                        onClick={() => setActiveActivity(activity)}
+                                        className="text-green-600 hover:text-green-800 text-sm font-medium px-4 py-2 border border-green-200 rounded-lg bg-green-50 flex items-center shadow-sm"
+                                    >
+                                        <Play className="w-4 h-4 mr-1" />
+                                        Preview / Play
+                                    </button>
+                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1.5 border border-blue-200 rounded-md bg-transparent">
                                         Edit
                                     </button>
-                                    <button className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1.5 border border-red-200 rounded-md bg-red-50">
+                                    <button className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1.5 border border-red-200 rounded-md bg-transparent">
                                         Remove
                                     </button>
                                 </div>
@@ -88,9 +97,39 @@ const LessonDetail = () => {
                         ))
                     )}
                 </div>
+
+                {/* Activity Player Modal */}
+                {activeActivity && (
+                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                        <div className="bg-gray-50 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-200">
+                            <div className="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-200">
+                                <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs mr-3">Preview Mode</span>
+                                    {activeActivity.title}
+                                </h2>
+                                <button
+                                    onClick={() => setActiveActivity(null)}
+                                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="p-8 min-h-[400px] flex items-center justify-center relative">
+                                <ActivityEngine
+                                    activity={activeActivity}
+                                    childId="preview-mode"
+                                    onFinished={(success) => {
+                                        setTimeout(() => setActiveActivity(null), 3500);
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
+
 
 export default LessonDetail;
