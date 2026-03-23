@@ -108,11 +108,16 @@ const updateActivity = async (req, res) => {
 const deleteActivity = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Activity');
+        const progressRepo = AppDataSource.getRepository('Progress');
+        
         const activity = await repo.findOne({ where: { id: req.params.id } });
 
         if (!activity) {
             return res.status(404).json({ message: 'Activity not found' });
         }
+
+        // Clear associated progress records to avoid FK constraint violations
+        await progressRepo.delete({ activityId: activity.id });
 
         await repo.remove(activity);
         res.json({ message: 'Activity removed' });
