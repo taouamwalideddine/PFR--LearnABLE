@@ -4,6 +4,9 @@ const {
     getChildren,
     getChildById,
     updateChild,
+    getChildLessons,
+    assignLesson,
+    removeLesson,
 } = require('../controllers/childController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,5 +23,15 @@ router
     .route('/:id')
     .get(getChildById)
     .put(updateChild);
+
+// Lesson assignment routes
+router
+    .route('/:id/lessons')
+    .get(getChildLessons)
+    .post(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignLesson);
+
+router
+    .route('/:id/lessons/:lessonId')
+    .delete(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), removeLesson);
 
 module.exports = router;

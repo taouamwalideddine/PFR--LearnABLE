@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { BookOpen, Plus, ChevronRight, LayoutList } from 'lucide-react';
+import { BookOpen, Plus, ChevronRight, LayoutList, PlayCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const LessonList = () => {
+    const { activeChild } = useAuth();
     const [lessons, setLessons] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchLessons();
-    }, []);
+    }, [activeChild]);
 
     const fetchLessons = async () => {
         try {
-            const response = await api.get('/lessons');
+            setLoading(true);
+            let response;
+            if (activeChild) {
+                // If a child is active, fetch only their assigned lessons
+                response = await api.get(`/children/${activeChild.id}/lessons`);
+            } else {
+                // Otherwise fetch all lessons for the educator/parent
+                response = await api.get('/lessons');
+            }
             setLessons(response.data);
         } catch (error) {
             console.error('Error fetching lessons:', error);
@@ -24,6 +34,58 @@ const LessonList = () => {
 
     if (loading) return <div className="p-8 text-center">Loading lessons...</div>;
 
+    // STUDENT VIEW
+    if (activeChild) {
+        return (
+            <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-end mb-12 animate-fade-in">
+                    <div>
+                        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 mb-2">My Lessons</h1>
+                        <p className="text-lg text-slate-500 font-medium">Lessons chosen just for you!</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {lessons.length === 0 ? (
+                        <div className="col-span-full py-16 text-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-dashed border-slate-300">
+                            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                            <p className="text-slate-500 text-xl font-bold">No lessons assigned yet.<br/>Ask your parent or teacher to add some!</p>
+                        </div>
+                    ) : (
+                        lessons.map((lesson) => (
+                            <div key={lesson.id} className="group relative bg-white/60 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col cursor-pointer animate-bounce-in">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[6rem] -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none"></div>
+                                
+                                <div className="p-8 flex-1 relative z-10">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center">
+                                            <BookOpen className="w-8 h-8" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-2xl font-extrabold text-slate-800 mb-2">{lesson.title}</h3>
+                                    <p className="text-slate-500 font-medium mb-6 line-clamp-2">
+                                        {lesson.description || 'Ready to learn?'}
+                                    </p>
+                                </div>
+                                
+                                <div className="bg-slate-50/50 border-t border-slate-100 p-6 relative z-10">
+                                    <Link
+                                        to={`/lessons/${lesson.id}`}
+                                        className="w-full flex justify-center items-center py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                    >
+                                        <PlayCircle className="w-6 h-6 mr-2" />
+                                        Start Lesson
+                                    </Link>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // PARENT / EDUCATOR VIEW
     return (
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">

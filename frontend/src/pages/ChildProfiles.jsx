@@ -1,108 +1,122 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { UserPlus, Settings, Headphones, VolumeX, Eye, Activity } from 'lucide-react';
+import { UserPlus, Settings, Headphones, VolumeX, Eye, Activity, PlayCircle, BookOpen } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import ManageLessonsModal from '../components/ManageLessonsModal';
 
-const [children, setChildren] = useState([]);
-const [showAddForm, setShowAddForm] = useState(false);
-const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    learningPace: 'NORMAL',
-    difficultyLevel: 1,
-    lowStimulation: false,
-    soundEnabled: true,
-});
-const [loading, setLoading] = useState(true);
+const ChildProfiles = () => {
+    const { switchChild } = useAuth();
+    const navigate = useNavigate();
+    const [children, setChildren] = useState([]);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [selectedChildForLessons, setSelectedChildForLessons] = useState(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        age: '',
+        learningPace: 'NORMAL',
+        difficultyLevel: 1,
+        lowStimulation: false,
+        soundEnabled: true,
+    });
+    const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-    fetchChildren();
-}, []);
-
-const fetchChildren = async () => {
-    try {
-        const response = await api.get('/children');
-        setChildren(response.data);
-    } catch (error) {
-        console.error('Error fetching children:', error);
-    } finally {
-        setLoading(false);
-    }
-};
-
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        const payload = {
-            name: formData.name,
-            age: formData.age,
-            learningPace: formData.learningPace,
-            difficultyLevel: formData.difficultyLevel,
-            sensoryPreferences: {
-                lowStimulation: formData.lowStimulation,
-                soundEnabled: formData.soundEnabled,
-            },
-        };
-        await api.post('/children', payload);
-        setShowAddForm(false);
+    useEffect(() => {
         fetchChildren();
-        setFormData({
-            name: '',
-            age: '',
-            learningPace: 'NORMAL',
-            difficultyLevel: 1,
-            lowStimulation: false,
-            soundEnabled: true,
-        });
-    } catch (error) {
-        console.error('Error creating child:', error);
-    }
-};
+    }, []);
 
-if (loading) return <div className="p-8 text-center">Loading profiles...</div>;
+    const fetchChildren = async () => {
+        try {
+            const response = await api.get('/children');
+            setChildren(response.data);
+        } catch (error) {
+            console.error('Error fetching children:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Child Profiles</h1>
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                name: formData.name,
+                age: formData.age,
+                learningPace: formData.learningPace,
+                difficultyLevel: formData.difficultyLevel,
+                sensoryPreferences: {
+                    lowStimulation: formData.lowStimulation,
+                    soundEnabled: formData.soundEnabled,
+                },
+            };
+            await api.post('/children', payload);
+            setShowAddForm(false);
+            fetchChildren();
+            setFormData({
+                name: '',
+                age: '',
+                learningPace: 'NORMAL',
+                difficultyLevel: 1,
+                lowStimulation: false,
+                soundEnabled: true,
+            });
+        } catch (error) {
+            console.error('Error creating child:', error);
+        }
+    };
+
+    const handlePlayAsChild = (child) => {
+        switchChild(child);
+        navigate('/dashboard');
+    };
+
+    if (loading) return <div className="p-8 text-center">Loading profiles...</div>;
+
+    return (
+        <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-end mb-12 animate-fade-in">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 mb-2">My Children</h1>
+                    <p className="text-lg text-slate-500 font-medium">Manage profiles and learning preferences.</p>
+                </div>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-1"
                 >
-                    <UserPlus className="w-5 h-5 mr-2" />
+                    <UserPlus className="w-5 h-5 mr-3" />
                     Add Profile
                 </button>
             </div>
 
             {showAddForm && (
-                <div className="mb-8 bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800">New Child Profile</h2>
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="mb-12 bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 animate-fade-in relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-bl-[10rem] -mr-8 -mt-8 pointer-events-none"></div>
+                    <h2 className="text-2xl font-bold mb-8 text-slate-800 relative z-10">New Child Profile</h2>
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Name</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Name</label>
                             <input
                                 type="text"
                                 required
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="block w-full border-slate-200 bg-slate-50 rounded-xl shadow-sm p-3 font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all border outline-none"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Age</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Age</label>
                             <input
                                 type="number"
                                 required
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="block w-full border-slate-200 bg-slate-50 rounded-xl shadow-sm p-3 font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all border outline-none"
                                 value={formData.age}
                                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Learning Pace</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Learning Pace</label>
                             <select
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white"
+                                className="block w-full border-slate-200 bg-slate-50 rounded-xl shadow-sm p-3 font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all border outline-none"
                                 value={formData.learningPace}
                                 onChange={(e) => setFormData({ ...formData, learningPace: e.target.value })}
                             >
@@ -112,48 +126,48 @@ return (
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Difficulty Level (1-5)</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Difficulty Level (1-5)</label>
                             <input
                                 type="range"
                                 min="1"
                                 max="5"
-                                className="mt-1 block w-full"
+                                className="mt-2 block w-full accent-indigo-600"
                                 value={formData.difficultyLevel}
                                 onChange={(e) => setFormData({ ...formData, difficultyLevel: e.target.value })}
                             />
-                            <div className="text-xs text-gray-500 mt-1">Current: {formData.difficultyLevel}</div>
+                            <div className="text-sm font-bold text-indigo-600 mt-2 text-right">Level {formData.difficultyLevel}</div>
                         </div>
 
-                        <div className="md:col-span-2 border-t pt-4">
-                            <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider flex items-center">
-                                <Settings className="w-4 h-4 mr-2 text-blue-500" />
+                        <div className="md:col-span-2 border-t border-slate-100 pt-8 mt-4">
+                            <h3 className="text-sm font-extrabold text-slate-400 mb-6 uppercase tracking-wider flex items-center">
+                                <Settings className="w-4 h-4 mr-2 text-indigo-400" />
                                 Sensory Preferences
                             </h3>
-                            <div className="flex space-x-8">
-                                <label className="flex items-center space-x-3 cursor-pointer group">
-                                    <div className={`p-2 rounded-full transition ${formData.lowStimulation ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
-                                        <Eye className="w-5 h-5" />
+                            <div className="flex flex-wrap gap-8">
+                                <label className="flex items-center space-x-4 cursor-pointer group bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                    <div className={`p-3 rounded-xl transition ${formData.lowStimulation ? 'bg-indigo-100 text-indigo-600 shadow-inner' : 'bg-white text-slate-400 shadow-sm'}`}>
+                                        <Eye className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <span className="text-sm font-medium text-gray-700">Low Stimulation Mode</span>
+                                        <span className="text-sm font-bold text-slate-700 block mb-1">Low Stimulation Mode</span>
                                         <input
                                             type="checkbox"
-                                            className="ml-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            className="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-all"
                                             checked={formData.lowStimulation}
                                             onChange={(e) => setFormData({ ...formData, lowStimulation: e.target.checked })}
                                         />
                                     </div>
                                 </label>
 
-                                <label className="flex items-center space-x-3 cursor-pointer group">
-                                    <div className={`p-2 rounded-full transition ${formData.soundEnabled ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                        {formData.soundEnabled ? <Headphones className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                                <label className="flex items-center space-x-4 cursor-pointer group bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                    <div className={`p-3 rounded-xl transition ${formData.soundEnabled ? 'bg-emerald-100 text-emerald-600 shadow-inner' : 'bg-red-50 text-red-500 shadow-sm'}`}>
+                                        {formData.soundEnabled ? <Headphones className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
                                     </div>
                                     <div>
-                                        <span className="text-sm font-medium text-gray-700">Sound Enabled</span>
+                                        <span className="text-sm font-bold text-slate-700 block mb-1">Sound Enabled</span>
                                         <input
                                             type="checkbox"
-                                            className="ml-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            className="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-all"
                                             checked={formData.soundEnabled}
                                             onChange={(e) => setFormData({ ...formData, soundEnabled: e.target.checked })}
                                         />
@@ -162,10 +176,10 @@ return (
                             </div>
                         </div>
 
-                        <div className="md:col-span-2 pt-4">
+                        <div className="md:col-span-2 pt-6">
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition"
+                                className="w-full bg-slate-900 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all"
                             >
                                 Save Profile
                             </button>
@@ -174,56 +188,80 @@ return (
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {children.length === 0 ? (
-                    <div className="col-span-full py-12 text-center bg-white rounded-lg border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500">No children profiles found. Add one to get started!</p>
+                    <div className="col-span-full py-16 text-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-dashed border-slate-300">
+                        <p className="text-slate-500 text-lg font-medium">No children profiles found.<br/>Click 'Add Profile' to get started!</p>
                     </div>
                 ) : (
                     children.map((child) => (
-                        <div key={child.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group">
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold">
+                        <div key={child.id} className="group relative bg-white/60 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[6rem] -mr-8 -mt-8 transition-transform group-hover:scale-110 pointer-events-none"></div>
+                            
+                            <div className="p-8 flex-1 relative z-10">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center text-3xl font-extrabold transform group-hover:rotate-6 transition-transform">
                                         {child.name.charAt(0)}
                                     </div>
                                     <div className="flex space-x-2">
                                         {child.sensoryPreferences?.lowStimulation && (
-                                            <span title="Low Stimulation Active" className="p-1 bg-yellow-100 text-yellow-600 rounded-md">
-                                                <Eye className="w-4 h-4" />
+                                            <span title="Low Stimulation Active" className="p-2 bg-yellow-100/80 text-yellow-700 rounded-xl backdrop-blur-sm">
+                                                <Eye className="w-5 h-5" />
                                             </span>
                                         )}
                                         {!child.sensoryPreferences?.soundEnabled && (
-                                            <span title="Sound Muted" className="p-1 bg-red-100 text-red-600 rounded-md">
-                                                <VolumeX className="w-4 h-4" />
+                                            <span title="Sound Muted" className="p-2 bg-red-100/80 text-red-600 rounded-xl backdrop-blur-sm">
+                                                <VolumeX className="w-5 h-5" />
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-1">{child.name}</h3>
-                                <p className="text-sm text-gray-500 mb-4">{child.age} years old • Level {child.difficultyLevel}</p>
-
-                                <div className="border-t pt-4 flex justify-between">
-                                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
-                                        Assigned Lessons
+                                <h3 className="text-2xl font-extrabold text-slate-800 mb-2">{child.name}</h3>
+                                <div className="flex items-center text-sm font-bold text-slate-400 mb-6 space-x-4">
+                                    <span className="bg-slate-100 px-3 py-1 rounded-lg">{child.age} years old</span>
+                                    <span className="bg-slate-100 px-3 py-1 rounded-lg">Level {child.difficultyLevel}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-slate-50/50 border-t border-slate-100 p-6 flex flex-col gap-3 relative z-10">
+                                <button
+                                    onClick={() => handlePlayAsChild(child)}
+                                    className="w-full flex justify-center items-center py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                >
+                                    <PlayCircle className="w-5 h-5 mr-2" />
+                                    Play as {child.name}
+                                </button>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setSelectedChildForLessons(child)}
+                                        className="w-full flex justify-center items-center py-3 bg-white text-indigo-600 font-bold border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
+                                    >
+                                        <BookOpen className="w-5 h-5 mr-2" />
+                                        Lessons
                                     </button>
                                     <Link
                                         to={`/progress/${child.id}`}
-                                        className="text-gray-600 hover:text-gray-800 text-sm font-medium flex items-center"
+                                        className="w-full flex justify-center items-center py-3 bg-white text-slate-700 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50 hover:border-slate-200 transition-colors"
                                     >
-                                        <Activity className="w-4 h-4 mr-1" />
-                                        View Progress
+                                        <Activity className="w-5 h-5 mr-2 text-slate-400" />
+                                        Progress
                                     </Link>
                                 </div>
                             </div>
-                            <div className="bg-blue-600 h-1.5 w-full opacity-0 group-hover:opacity-100 transition"></div>
                         </div>
                     ))
                 )}
             </div>
+
+            {/* Manage Lessons Modal */}
+            {selectedChildForLessons && (
+                <ManageLessonsModal 
+                    child={selectedChildForLessons} 
+                    onClose={() => setSelectedChildForLessons(null)} 
+                />
+            )}
         </div>
-    </div>
-);
+    );
 };
 
 export default ChildProfiles;

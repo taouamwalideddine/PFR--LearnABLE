@@ -1,4 +1,4 @@
-const prisma = require('../utils/prisma');
+const AppDataSource = require('../config/data-source');
 
 // @desc    Create a new child profile
 // @route   POST /api/children
@@ -7,17 +7,17 @@ const createChild = async (req, res) => {
     const { name, age, sensoryPreferences, learningPace, difficultyLevel } = req.body;
 
     try {
-        const child = await prisma.child.create({
-            data: {
-                name,
-                age: parseInt(age),
-                sensoryPreferences,
-                learningPace,
-                difficultyLevel: parseInt(difficultyLevel) || 1,
-                parentId: req.user.id,
-            },
+        const repo = AppDataSource.getRepository('Child');
+        const newChild = repo.create({
+            name,
+            age: parseInt(age),
+            sensoryPreferences,
+            learningPace,
+            difficultyLevel: parseInt(difficultyLevel) || 1,
+            parentId: req.user.id,
         });
 
+        const child = await repo.save(newChild);
         res.status(201).json(child);
     } catch (error) {
         console.error(error);
@@ -30,7 +30,8 @@ const createChild = async (req, res) => {
 // @access  Private
 const getChildren = async (req, res) => {
     try {
-        const children = await prisma.child.findMany({
+        const repo = AppDataSource.getRepository('Child');
+        const children = await repo.find({
             where: { parentId: req.user.id },
         });
         res.json(children);
@@ -45,15 +46,13 @@ const getChildren = async (req, res) => {
 // @access  Private
 const getChildById = async (req, res) => {
     try {
-        const child = await prisma.child.findUnique({
-            where: { id: req.params.id },
-        });
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOneBy({ id: req.params.id });
 
         if (!child) {
             return res.status(404).json({ message: 'Child not found' });
         }
 
-        // Check if user is parent or admin
         if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(403).json({ message: 'Not authorized' });
         }
@@ -70,8 +69,36 @@ const getChildById = async (req, res) => {
 // @access  Private
 const updateChild = async (req, res) => {
     try {
-        const child = await prisma.child.findUnique({
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOneBy({ id: req.params.id });
+
+        if (!child) {
+            return res.status(404).json({ message: 'Child not found' });
+        }
+
+        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await repo.update(req.params.id, req.body);
+        const updatedChild = await repo.findOneBy({ id: req.params.id });
+
+        res.json(updatedChild);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get all lessons assigned to a child
+// @route   GET /api/children/:id/lessons
+// @access  Private
+const getChildLessons = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOne({
             where: { id: req.params.id },
+            relations: ['lessons'], // Fetch the many-to-many relation data
         });
 
         if (!child) {
@@ -82,15 +109,76 @@ const updateChild = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const updatedChild = await prisma.child.update({
-            where: { id: req.params.id },
-            data: req.body,
-        });
-
-        res.json(updatedChild);
+        res.json(child.lessons);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error retrieving lessons' });
+    }
+};
+
+// @desc    Assign a lesson to a child
+// @route   POST /api/children/:id/lessons
+// @access  Private
+const assignLesson = async (req, res) => {
+    const { lessonId } = req.body;
+    try {
+        const repo = AppDataSource.getRepository('Child');
+        const lessonRepo = AppDataSource.getRepository('Lesson');
+
+        const child = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['lessons'],
+        });
+
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const lesson = await lessonRepo.findOneBy({ id: lessonId });
+        if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
+
+        // Check if already assigned
+        const isAssigned = child.lessons.some(l => l.id === lessonId);
+        if (isAssigned) {
+            return res.status(400).json({ message: 'Lesson is already assigned to this child' });
+        }
+
+        child.lessons.push(lesson);
+        await repo.save(child);
+
+        res.status(201).json({ message: 'Lesson assigned successfully', child });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error assigning lesson' });
+    }
+};
+
+// @desc    Remove a lesson from a child
+// @route   DELETE /api/children/:id/lessons/:lessonId
+// @access  Private
+const removeLesson = async (req, res) => {
+    const { id, lessonId } = req.params;
+    try {
+        const repo = AppDataSource.getRepository('Child');
+
+        const child = await repo.findOne({
+            where: { id },
+            relations: ['lessons'],
+        });
+
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        child.lessons = child.lessons.filter(l => l.id !== lessonId);
+        await repo.save(child);
+
+        res.json({ message: 'Lesson removed successfully', child });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error removing lesson' });
     }
 };
 
@@ -99,4 +187,7 @@ module.exports = {
     getChildren,
     getChildById,
     updateChild,
+    getChildLessons,
+    assignLesson,
+    removeLesson,
 };

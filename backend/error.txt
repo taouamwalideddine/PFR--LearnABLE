@@ -1,0 +1,10 @@
+error: password authentication failed for user "johndoe"\nerror: password authentication failed for user "johndoe"
+    at parseErrorMessage (C:\Users\safiy\OneDrive\Desktop\LearnAble\backend\node_modules\pg-protocol\dist\parser.js:305:11)
+    at Parser.handlePacket (C:\Users\safiy\OneDrive\Desktop\LearnAble\backend\node_modules\pg-protocol\dist\parser.js:143:27)
+    at Parser.parse (C:\Users\safiy\OneDrive\Desktop\LearnAble\backend\node_modules\pg-protocol\dist\parser.js:37:38)
+    at Socket.<anonymous> (C:\Users\safiy\OneDrive\Desktop\LearnAble\backend\node_modules\pg-protocol\dist\index.js:11:42)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)

@@ -9,11 +9,11 @@ const MultipleChoice = ({ activity, onComplete }) => {
     // Expected content structure:
     // content: { question: "What is 2+2?", options: ["3", "4", "5"], correctAnswer: "4" }
 
-    const handleSelect = (option) => {
+    const handleSelect = (option, idx) => {
         if (showFeedback) return;
 
         setSelectedOption(option);
-        const correct = option === activity.content.correctAnswer;
+        const correct = idx === activity.content.correctOptionIndex;
         setIsCorrect(correct);
         setShowFeedback(true);
 
@@ -23,41 +23,41 @@ const MultipleChoice = ({ activity, onComplete }) => {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center text-balance">
+        <div className="w-full max-w-2xl mx-auto bg-slate-100 rounded-3xl shadow-xl border border-slate-200 p-10 animate-fade-in">
+            <h2 className="text-3xl font-bold text-slate-800 mb-10 text-center text-balance leading-tight">
                 {activity.content.question}
             </h2>
 
             <div className="space-y-4">
                 {activity.content.options.map((option, index) => {
-                    let buttonClass = "w-full text-left px-6 py-4 rounded-xl border-2 transition-all text-lg font-medium ";
+                    let buttonClass = "w-full text-left px-8 py-5 rounded-2xl border-2 transition-all text-xl font-bold flex justify-between items-center ";
 
                     if (!showFeedback) {
-                        buttonClass += "border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-700";
+                        buttonClass += "border-slate-300 hover:border-indigo-400 hover:bg-slate-200 text-slate-700 bg-white shadow-sm hover:shadow-md hover:-translate-y-1";
                     } else {
-                        if (option === activity.content.correctAnswer) {
-                            buttonClass += "border-green-500 bg-green-50 text-green-700 relative";
-                        } else if (option === selectedOption && option !== activity.content.correctAnswer) {
-                            buttonClass += "border-red-500 bg-red-50 text-red-700 relative";
+                        if (index === activity.content.correctOptionIndex) {
+                            buttonClass += "border-emerald-500 bg-emerald-500 text-white shadow-lg";
+                        } else if (option === selectedOption && index !== activity.content.correctOptionIndex) {
+                            buttonClass += "border-red-500 bg-red-500 text-white shadow-md";
                         } else {
-                            buttonClass += "border-gray-200 opacity-50 text-gray-500";
+                            buttonClass += "border-slate-300 opacity-40 text-slate-500 bg-white";
                         }
                     }
 
                     return (
                         <button
                             key={index}
-                            onClick={() => handleSelect(option)}
+                            onClick={() => handleSelect(option, index)}
                             disabled={showFeedback}
                             className={buttonClass}
                         >
-                            {option}
+                            <span>{option}</span>
 
-                            {showFeedback && option === activity.content.correctAnswer && (
-                                <CheckCircle2 className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-green-500" />
+                            {showFeedback && index === activity.content.correctOptionIndex && (
+                                <CheckCircle2 className="w-8 h-8 text-white animate-bounce-in" />
                             )}
-                            {showFeedback && option === selectedOption && option !== activity.content.correctAnswer && (
-                                <XCircle className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-red-500" />
+                            {showFeedback && option === selectedOption && index !== activity.content.correctOptionIndex && (
+                                <XCircle className="w-8 h-8 text-white" />
                             )}
                         </button>
                     );

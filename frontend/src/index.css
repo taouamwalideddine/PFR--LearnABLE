@@ -1,1 +1,158 @@
 @import "tailwindcss";
+
+@theme {
+  /* INVERSION HACK FOR INSTANT DARK MODE 
+     Matches exactly the user's provided palette: #ffffff, #676f9d, #424769, #2d3250, #f9b17a 
+  */
+  
+  --color-white: #2d3250;
+  --color-black: #ffffff;
+
+  /* SLATE / GRAY Backgrounds & Text */
+  --color-slate-50: #1b1e2b;
+  --color-slate-100: #212536;
+  --color-slate-200: #424769;
+  --color-slate-300: #424769;
+  --color-slate-400: #676f9d;
+  --color-slate-500: #676f9d;
+  --color-slate-600: #8e95bf;
+  --color-slate-700: #b9c0e6;
+  --color-slate-800: #ffffff;
+  --color-slate-900: #ffffff;
+
+  --color-gray-50: #1b1e2b;
+  --color-gray-100: #212536;
+  --color-gray-200: #424769;
+  --color-gray-300: #424769;
+  --color-gray-400: #676f9d;
+  --color-gray-500: #676f9d;
+  --color-gray-600: #8e95bf;
+  --color-gray-700: #b9c0e6;
+  --color-gray-800: #ffffff;
+  --color-gray-900: #ffffff;
+
+  /* INDIGO (Primary Accent) -> Peachy Yellow */
+  --color-indigo-50: #424769;
+  --color-indigo-100: #424769;
+  --color-indigo-200: #676f9d;
+  --color-indigo-300: #676f9d;
+  --color-indigo-400: #d69363;
+  --color-indigo-500: #f9b17a;
+  --color-indigo-600: #f9b17a;
+  --color-indigo-700: #df9962;
+  --color-indigo-800: #c98551;
+  --color-indigo-900: #1b1e2b;
+  --color-indigo-950: #1b1e2b;
+
+  /* PURPLE / SCARED Emotion */
+  --color-purple-50: #332d4a; 
+  --color-purple-100: #423b61;
+  --color-purple-200: #584f82;
+  --color-purple-300: #7369a3;
+  --color-purple-400: #938bc4;
+  --color-purple-500: #b7b0e6; 
+  --color-purple-600: #d5d0fa; 
+  --color-purple-700: #e8e5ff;
+  --color-purple-800: #ffffff;
+  --color-purple-900: #ffffff;
+  
+  /* BLUE / SAD Emotion */
+  --color-blue-50: #2d3b50;
+  --color-blue-100: #364866;
+  --color-blue-200: #48608a;
+  --color-blue-300: #5e7ba8;
+  --color-blue-400: #7b9ac9;
+  --color-blue-500: #99b8e6;
+  --color-blue-600: #bad5fc;
+  --color-blue-700: #dceaff;
+  --color-blue-800: #ffffff;
+  --color-blue-900: #ffffff;
+
+  /* RED / ANGRY Emotion */
+  --color-red-50: #4a2d33;
+  --color-red-100: #5c353d;
+  --color-red-200: #7a4651;
+  --color-red-300: #9e5d6a;
+  --color-red-400: #c47685;
+  --color-red-500: #e691a1;
+  --color-red-600: #ffb3c1;
+  --color-red-700: #ffd6df;
+  --color-red-800: #ffffff;
+  --color-red-900: #ffffff;
+
+  /* YELLOW / HAPPY Emotion */
+  --color-yellow-50: #4a452d;
+  --color-yellow-100: #615a3a;
+  --color-yellow-200: #80764c;
+  --color-yellow-300: #a39763;
+  --color-yellow-400: #c7b97d;
+  --color-yellow-500: #ebdc9b;
+  --color-yellow-600: #ffefb0;
+  --color-yellow-700: #fff9de;
+  --color-yellow-800: #ffffff;
+  --color-yellow-900: #ffffff;
+  
+  /* EMERALD / GREEN (Success/Buttons) */
+  --color-emerald-50: #2d4a3b;
+  --color-emerald-100: #385e4a;
+  --color-emerald-200: #4a7d62;
+  --color-emerald-300: #5fa380;
+  --color-emerald-400: #7ec4a0;
+  --color-emerald-500: #a2e8c4;
+  --color-emerald-600: #c4fadc;
+  --color-emerald-700: #e8fdf1;
+  --color-emerald-800: #ffffff;
+  --color-emerald-900: #ffffff;
+
+  --color-green-50: #2d4a3b;
+  --color-green-100: #385e4a;
+  --color-green-200: #4a7d62;
+  --color-green-300: #5fa380;
+  --color-green-400: #7ec4a0;
+  --color-green-500: #a2e8c4;
+  --color-green-600: #c4fadc;
+  --color-green-700: #e8fdf1;
+  --color-green-800: #ffffff;
+  --color-green-900: #ffffff;
+}
+
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .animate-bounce-in {
+        animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

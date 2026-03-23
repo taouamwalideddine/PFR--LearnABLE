@@ -22,11 +22,21 @@ app.use('/api/children', childRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/rewards', require('./routes/rewardRoutes'));
+
+const AppDataSource = require('./config/data-source');
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'LearnAble API is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+AppDataSource.initialize()
+  .then(() => {
+    console.log('PostgreSQL Database connected via TypeORM');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Error connecting to PostgreSQL datababse:', error);
+  });

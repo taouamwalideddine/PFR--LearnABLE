@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity, Clock, Target, Award, ArrowLeft } from 'lucide-react';
+import RewardGallery from '../components/rewards/RewardGallery';
 
 const ProgressDashboard = () => {
     const { childId } = useParams();
@@ -148,6 +149,9 @@ const ProgressDashboard = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Rewards Section */}
+                <RewardGallery childId={childId} />
             </div>
         </div>
     );

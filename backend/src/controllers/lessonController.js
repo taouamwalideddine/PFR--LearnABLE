@@ -1,4 +1,4 @@
-const prisma = require('../utils/prisma');
+const AppDataSource = require('../config/data-source');
 
 // @desc    Create a new lesson
 // @route   POST /api/lessons
@@ -7,15 +7,15 @@ const createLesson = async (req, res) => {
     const { title, category, description, difficulty } = req.body;
 
     try {
-        const lesson = await prisma.lesson.create({
-            data: {
-                title,
-                category,
-                description,
-                difficulty: parseInt(difficulty) || 1,
-            },
+        const repo = AppDataSource.getRepository('Lesson');
+        const newLesson = repo.create({
+            title,
+            category,
+            description,
+            difficulty: parseInt(difficulty) || 1,
         });
 
+        const lesson = await repo.save(newLesson);
         res.status(201).json(lesson);
     } catch (error) {
         console.error(error);
@@ -28,8 +28,9 @@ const createLesson = async (req, res) => {
 // @access  Private
 const getLessons = async (req, res) => {
     try {
-        const lessons = await prisma.lesson.findMany({
-            include: { activities: true },
+        const repo = AppDataSource.getRepository('Lesson');
+        const lessons = await repo.find({
+            relations: ['activities'],
         });
         res.json(lessons);
     } catch (error) {
@@ -43,9 +44,10 @@ const getLessons = async (req, res) => {
 // @access  Private
 const getLessonById = async (req, res) => {
     try {
-        const lesson = await prisma.lesson.findUnique({
+        const repo = AppDataSource.getRepository('Lesson');
+        const lesson = await repo.findOne({
             where: { id: req.params.id },
-            include: { activities: true },
+            relations: ['activities'],
         });
 
         if (!lesson) {
@@ -64,10 +66,9 @@ const getLessonById = async (req, res) => {
 // @access  Private (Educator/Admin)
 const updateLesson = async (req, res) => {
     try {
-        const lesson = await prisma.lesson.update({
-            where: { id: req.params.id },
-            data: req.body,
-        });
+        const repo = AppDataSource.getRepository('Lesson');
+        await repo.update(req.params.id, req.body);
+        const lesson = await repo.findOneBy({ id: req.params.id });
         res.json(lesson);
     } catch (error) {
         console.error(error);
@@ -81,14 +82,26 @@ const updateLesson = async (req, res) => {
 const assignLesson = async (req, res) => {
     const { childId } = req.body;
     try {
-        const updatedChild = await prisma.child.update({
+        const childRepo = AppDataSource.getRepository('Child');
+        const child = await childRepo.findOne({
             where: { id: childId },
-            data: {
-                lessons: {
-                    connect: { id: req.params.id },
-                },
-            },
+            relations: ['lessons'],
         });
+
+        if (!child) {
+            return res.status(404).json({ message: 'Child not found' });
+        }
+
+        const lessonRepo = AppDataSource.getRepository('Lesson');
+        const lesson = await lessonRepo.findOneBy({ id: req.params.id });
+
+        if (!lesson) {
+            return res.status(404).json({ message: 'Lesson not found' });
+        }
+
+        child.lessons.push(lesson);
+        const updatedChild = await childRepo.save(child);
+
         res.json({ message: 'Lesson assigned successfully', childId: updatedChild.id });
     } catch (error) {
         console.error(error);
