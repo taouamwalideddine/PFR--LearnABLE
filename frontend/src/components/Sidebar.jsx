@@ -39,7 +39,7 @@ const Sidebar = () => {
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'My Children', href: '/children', icon: Users, hidden: user?.role === 'EDUCATEUR' || user?.role === 'ENFANT' },
-        { name: 'Lessons', href: '/lessons', icon: GraduationCap, hidden: user?.role === 'ENFANT' },
+        { name: 'Curriculum', href: '/curriculum', icon: GraduationCap, hidden: user?.role === 'ENFANT' },
         { name: 'Emotions Demo', href: '/emotions', icon: Smile },
         // { name: 'Community Forum', href: '/forum', icon: MessageSquare }, // Coming soon
     ];

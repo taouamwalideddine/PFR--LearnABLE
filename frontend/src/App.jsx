@@ -10,6 +10,8 @@ import ChildProfiles from './pages/ChildProfiles';
 import LessonList from './pages/LessonList';
 import LessonForm from './pages/LessonForm';
 import LessonDetail from './pages/LessonDetail';
+import CourseList from './pages/CourseList';
+import CourseDetail from './pages/CourseDetail';
 import ProgressDashboard from './pages/ProgressDashboard';
 import EmotionsModule from './pages/EmotionsModule';
 import Sidebar from './components/Sidebar';
@@ -55,18 +57,18 @@ function AppContent() {
                             }
                         />
                         <Route
-                            path="/lessons"
+                            path="/curriculum"
                             element={
                                 <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
-                                    <LessonList />
+                                    <CourseList />
                                 </ProtectedRoute>
                             }
                         />
                         <Route
-                            path="/lessons/new"
+                            path="/curriculum/:courseId"
                             element={
-                                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN']}>
-                                    <LessonForm />
+                                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
+                                    <CourseDetail />
                                 </ProtectedRoute>
                             }
                         />
