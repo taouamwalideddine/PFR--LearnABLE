@@ -98,8 +98,11 @@ const LessonDetail = () => {
                         <p className="text-2xl text-slate-600 font-bold mb-10">Amazing job, {activeChild.name}! You finished <span className="text-indigo-600">{lesson.title}</span>.</p>
                         
                         <div className="flex gap-4 justify-center">
-                            <button onClick={() => navigate('/dashboard')} className="px-10 py-5 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all text-xl">
-                                Return Home
+                            <button 
+                                onClick={() => navigate(lesson.module?.course ? `/map/${lesson.module.course.id}` : '/dashboard')} 
+                                className="px-10 py-5 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all text-xl"
+                            >
+                                {lesson.module?.course ? 'Back to Map' : 'Return Home'}
                             </button>
                         </div>
                     </div>

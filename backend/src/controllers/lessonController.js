@@ -49,7 +49,7 @@ const getLessonById = async (req, res) => {
         const repo = AppDataSource.getRepository('Lesson');
         const lesson = await repo.findOne({
             where: { id: req.params.id },
-            relations: ['activities'],
+            relations: ['activities', 'module', 'module.course'],
         });
 
         if (!lesson) {
