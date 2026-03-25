@@ -15,12 +15,12 @@ router.use(protect);
 router
     .route('/')
     .get(getLessons)
-    .post(authorize('EDUCATEUR', 'ADMIN'), createLesson);
+    .post(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), createLesson);
 
 router
     .route('/:id')
     .get(getLessonById)
-    .put(authorize('EDUCATEUR', 'ADMIN'), updateLesson);
+    .put(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateLesson);
 
 router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignLesson);
 

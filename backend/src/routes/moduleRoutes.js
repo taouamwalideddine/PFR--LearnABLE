@@ -10,9 +10,9 @@ const router = express.Router();
 
 router.use(protect);
 
-// Educator/Admin only routes
-router.post('/', authorize('EDUCATEUR', 'ADMIN'), createModule);
-router.put('/:id', authorize('EDUCATEUR', 'ADMIN'), updateModule);
-router.delete('/:id', authorize('EDUCATEUR', 'ADMIN'), deleteModule);
+// Educator/Admin/Parent routes
+router.post('/', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), createModule);
+router.put('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateModule);
+router.delete('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), deleteModule);
 
 module.exports = router;

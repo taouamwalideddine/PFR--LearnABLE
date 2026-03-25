@@ -15,9 +15,9 @@ router.use(protect); // All routes require authentication
 router.get('/', getCourses);
 router.get('/:id', getCourseById);
 
-// Educator/Admin only routes
-router.post('/', authorize('EDUCATEUR', 'ADMIN'), createCourse);
-router.put('/:id', authorize('EDUCATEUR', 'ADMIN'), updateCourse);
-router.delete('/:id', authorize('EDUCATEUR', 'ADMIN'), deleteCourse);
+// Educator/Admin/Parent routes
+router.post('/', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), createCourse);
+router.put('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateCourse);
+router.delete('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), deleteCourse);
 
 module.exports = router;
