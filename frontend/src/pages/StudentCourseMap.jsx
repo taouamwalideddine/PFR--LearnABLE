@@ -90,7 +90,7 @@ const StudentCourseMap = () => {
                                             <div className={`w-full sm:w-1/2 flex justify-center sm:absolute sm:${isLeft ? 'left-0 pr-16 justify-end' : 'right-0 pl-16 justify-start'}`}>
                                                 
                                                 <div 
-                                                    onClick={() => navigate(`/play/${lesson.id}`)}
+                                                    onClick={() => navigate(`/lessons/${lesson.id}`)}
                                                     className="group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 relative flex flex-col items-center"
                                                 >
                                                     {/* The Stepping Stone */}
