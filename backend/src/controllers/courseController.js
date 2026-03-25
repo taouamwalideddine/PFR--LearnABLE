@@ -32,7 +32,7 @@ const getCourseById = async (req, res) => {
         const repo = AppDataSource.getRepository('Course');
         const course = await repo.findOne({
             where: { id: req.params.id },
-            relations: ['modules', 'modules.lessons']
+            relations: ['modules', 'modules.lessons', 'children']
         });
         if (!course) return res.status(404).json({ message: 'Course not found' });
         
@@ -89,24 +89,26 @@ const assignCourse = async (req, res) => {
         const courseRepo = AppDataSource.getRepository('Course');
         const childRepo = AppDataSource.getRepository('Child');
         const course = await courseRepo.findOne({
-            where: { id: req.params.id },
-            relations: ['children'] // must load relation to append
+            where: { id: req.params.id }
         });
-        const child = await childRepo.findOne({ where: { id: req.body.childId } });
+        const child = await childRepo.findOne({ 
+            where: { id: req.body.childId },
+            relations: ['courses'] // Child is the owner of the relation
+        });
         
         if (!course || !child) return res.status(404).json({ message: 'Course or Child not found' });
         
-        if (!course.children) {
-            course.children = [];
+        if (!child.courses) {
+            child.courses = [];
         }
 
         // Prevent duplicate assignment
-        if (!course.children.some(c => c.id === child.id)) {
-            course.children.push(child);
-            await courseRepo.save(course);
+        if (!child.courses.some(c => c.id === course.id)) {
+            child.courses.push(course);
+            await childRepo.save(child);
         }
         
-        res.json({ message: 'Course assigned successfully' });
+        res.json({ message: 'Course assigned successfully', course });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
