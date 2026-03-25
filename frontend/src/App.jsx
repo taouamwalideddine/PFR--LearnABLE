@@ -65,6 +65,14 @@ function AppContent() {
                             }
                         />
                         <Route
+                            path="/lessons"
+                            element={
+                                <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
+                                    <LessonList />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
                             path="/curriculum/:courseId"
                             element={
                                 <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>

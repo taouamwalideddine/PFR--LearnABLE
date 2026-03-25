@@ -18,7 +18,7 @@ module.exports = new EntitySchema({
         },
         category: {
             type: 'varchar',
-            default: "'GENERAL'",
+            default: 'GENERAL',
         },
         bannerUrl: {
             type: 'varchar',
