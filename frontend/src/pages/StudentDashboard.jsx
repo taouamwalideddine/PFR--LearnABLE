@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { PlayCircle, Award, Smile } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { PlayCircle, Award, Smile, Map } from 'lucide-react';
 import RewardGallery from '../components/rewards/RewardGallery';
+import api from '../api/axios';
 
 const StudentDashboard = () => {
     const { activeChild } = useAuth();
+    const navigate = useNavigate();
+    const [courses, setCourses] = useState([]);
+
+    useEffect(() => {
+        if (activeChild) {
+            api.get(`/children/${activeChild.id}/courses`)
+                .then(res => setCourses(res.data))
+                .catch(err => console.error(err));
+        }
+    }, [activeChild]);
 
     if (!activeChild) return null;
 
@@ -23,8 +34,27 @@ const StudentDashboard = () => {
                     <p className="text-2xl text-slate-600 font-medium">What would you like to do today?</p>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
                     
+                    {courses.map((course, idx) => (
+                        <div 
+                            key={course.id}
+                            onClick={() => navigate(`/map/${course.id}`)}
+                            className="group rounded-[2rem] bg-white p-8 shadow-xl shadow-indigo-100 hover:shadow-2xl hover:shadow-indigo-200 transform hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-indigo-200 relative overflow-hidden cursor-pointer flex flex-col justify-between"
+                        >
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-9xl leading-none pointer-events-none transform -rotate-12 group-hover:scale-110 transition-transform">
+                                🗺️
+                            </div>
+                            <div>
+                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+                                    <Map className="w-8 h-8 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-800 mb-2 leading-tight">{course.title}</h2>
+                                <p className="text-slate-500 font-medium">Embark on this adventure!</p>
+                            </div>
+                        </div>
+                    ))}
+
                     {/* Learn & Play Card */}
                     <Link to="/lessons" className="group rounded-[2rem] bg-white p-8 shadow-xl shadow-indigo-100 hover:shadow-2xl hover:shadow-indigo-200 transform hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-indigo-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-9xl leading-none pointer-events-none transform -rotate-12 group-hover:scale-110 transition-transform">

@@ -14,6 +14,7 @@ import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import ProgressDashboard from './pages/ProgressDashboard';
 import EmotionsModule from './pages/EmotionsModule';
+import StudentCourseMap from './pages/StudentCourseMap';
 import Sidebar from './components/Sidebar';
 
 // A component to intelligently route between dashboards based on activeChild
@@ -101,6 +102,14 @@ function AppContent() {
                             element={
                                 <ProtectedRoute>
                                     <EmotionsModule />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/map/:courseId"
+                            element={
+                                <ProtectedRoute>
+                                    <StudentCourseMap />
                                 </ProtectedRoute>
                             }
                         />
