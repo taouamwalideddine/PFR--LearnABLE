@@ -3,6 +3,7 @@ import api from '../../api/axios';
 import MultipleChoice from './MultipleChoice';
 import EmotionRecognition from './EmotionRecognition';
 import DragDrop from './DragDrop';
+import InformationCard from './InformationCard';
 import { useAuth } from '../../context/AuthContext';
 import { PlayCircle, Star } from 'lucide-react';
 
@@ -102,6 +103,9 @@ const ActivityEngine = ({ activity, childId, onFinished }) => {
             break;
         case 'drag_drop':
             activityContent = <DragDrop activity={activity} onComplete={handleComplete} />;
+            break;
+        case 'information_card':
+            activityContent = <InformationCard activity={activity} onComplete={handleComplete} />;
             break;
         default:
             activityContent = (
