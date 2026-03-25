@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { ArrowLeft, Plus, FolderTree, Book, MoreVertical, X, Calendar, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, FolderTree, Book, X, Calendar, UserPlus, Edit2, Trash2 } from 'lucide-react';
 import AssignCourseModal from '../components/AssignCourseModal';
 
 const CourseDetail = () => {
@@ -15,6 +15,8 @@ const CourseDetail = () => {
     const [showLessonModal, setShowLessonModal] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [activeModuleId, setActiveModuleId] = useState(null);
+    const [editingModule, setEditingModule] = useState(null);
+    const [editingLesson, setEditingLesson] = useState(null);
 
     // Form states
     const [title, setTitle] = useState('');
@@ -36,16 +38,24 @@ const CourseDetail = () => {
         }
     };
 
-    const handleCreateModule = async (e) => {
+    const handleSaveModule = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/modules', {
-                title,
-                description: desc,
-                courseId,
-                orderIndex: course.modules?.length || 0
-            });
+            if (editingModule) {
+                await api.put(`/modules/${editingModule.id}`, {
+                    title,
+                    description: desc
+                });
+            } else {
+                await api.post('/modules', {
+                    title,
+                    description: desc,
+                    courseId,
+                    orderIndex: course.modules?.length || 0
+                });
+            }
             setShowModuleModal(false);
+            setEditingModule(null);
             setTitle('');
             setDesc('');
             fetchCourse();
@@ -54,17 +64,25 @@ const CourseDetail = () => {
         }
     };
 
-    const handleCreateLesson = async (e) => {
+    const handleSaveLesson = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/lessons', {
-                title,
-                category: course.category || 'GENERAL',
-                description: desc,
-                difficulty: 1,
-                moduleId: activeModuleId
-            });
+            if (editingLesson) {
+                await api.put(`/lessons/${editingLesson.id}`, {
+                    title,
+                    description: desc
+                });
+            } else {
+                await api.post('/lessons', {
+                    title,
+                    category: course.category || 'GENERAL',
+                    description: desc,
+                    difficulty: 1,
+                    moduleId: activeModuleId
+                });
+            }
             setShowLessonModal(false);
+            setEditingLesson(null);
             setTitle('');
             setDesc('');
             setActiveModuleId(null);
@@ -74,7 +92,28 @@ const CourseDetail = () => {
         }
     };
 
+    const handleDeleteModule = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm("Delete this module and all its lessons?")) {
+            try {
+                await api.delete(`/modules/${id}`);
+                fetchCourse();
+            } catch(e) { console.error(e) }
+        }
+    };
+
+    const handleDeleteLesson = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm("Delete this lesson and all its associated progress/activities?")) {
+            try {
+                await api.delete(`/lessons/${id}`);
+                fetchCourse();
+            } catch(e) { console.error(e) }
+        }
+    };
+
     const openLessonModal = (moduleId) => {
+        setEditingLesson(null);
         setActiveModuleId(moduleId);
         setTitle('');
         setDesc('');
@@ -115,6 +154,7 @@ const CourseDetail = () => {
                     </button>
                     <button 
                         onClick={() => {
+                            setEditingModule(null);
                             setTitle('');
                             setDesc('');
                             setShowModuleModal(true);
@@ -147,9 +187,26 @@ const CourseDetail = () => {
                                         {module.description && <p className="text-slate-500 font-medium">{module.description}</p>}
                                     </div>
                                 </div>
-                                <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-200 rounded-xl transition-colors">
-                                    <MoreVertical className="w-5 h-5" />
-                                </button>
+                                <div className="flex space-x-1">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingModule(module);
+                                            setTitle(module.title);
+                                            setDesc(module.description);
+                                            setShowModuleModal(true);
+                                        }}
+                                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-200 rounded-xl transition-colors"
+                                    >
+                                        <Edit2 className="w-5 h-5" />
+                                    </button>
+                                    <button 
+                                        onClick={(e) => handleDeleteModule(e, module.id)}
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-xl transition-colors"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                             
                             <div className="p-8">
@@ -167,7 +224,28 @@ const CourseDetail = () => {
                                                 <h4 className="font-bold text-slate-800 group-hover:text-indigo-800">{lesson.title}</h4>
                                                 <p className="text-sm text-slate-500 line-clamp-1">{lesson.description}</p>
                                             </div>
-                                            <div className="text-sm font-bold text-indigo-500 group-hover:translate-x-2 transition-transform">
+                                            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingLesson(lesson);
+                                                        setTitle(lesson.title);
+                                                        setDesc(lesson.description);
+                                                        setActiveModuleId(module.id);
+                                                        setShowLessonModal(true);
+                                                    }}
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-lg"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDeleteLesson(e, lesson.id)}
+                                                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="text-sm font-bold text-indigo-500 ml-4 hidden sm:block">
                                                 Manage Content &rarr;
                                             </div>
                                         </div>
@@ -192,16 +270,22 @@ const CourseDetail = () => {
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-bounce-in overflow-hidden">
                         <div className="px-8 py-6 flex justify-between items-center border-b border-slate-100 bg-slate-50">
                             <h2 className="text-2xl font-extrabold text-slate-800">
-                                {showModuleModal ? 'Add New Module' : 'Add New Lesson'}
-                            </h2>
-                            <button 
-                                onClick={() => showModuleModal ? setShowModuleModal(false) : setShowLessonModal(false)} 
+                                            {showModuleModal 
+                                                ? (editingModule ? 'Edit Module' : 'Add New Module') 
+                                                : (editingLesson ? 'Edit Lesson' : 'Add New Lesson')
+                                            }
+                                        </h2>
+                                        <button 
+                                            onClick={() => {
+                                                setShowModuleModal(false);
+                                                setShowLessonModal(false);
+                                            }}
                                 className="p-2 text-slate-400 hover:bg-slate-200 rounded-full"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <form onSubmit={showModuleModal ? handleCreateModule : handleCreateLesson} className="p-8 space-y-6">
+                        <form onSubmit={showModuleModal ? handleSaveModule : handleSaveLesson} className="p-8 space-y-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
                                 <input
@@ -223,7 +307,7 @@ const CourseDetail = () => {
                                 ></textarea>
                             </div>
                             <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                                <button type="button" onClick={() => showModuleModal ? setShowModuleModal(false) : setShowLessonModal(false)} className="px-6 py-2.5 font-bold text-slate-500 hover:text-slate-700">Cancel</button>
+                                <button type="button" onClick={() => {setShowModuleModal(false); setShowLessonModal(false);}} className="px-6 py-2.5 font-bold text-slate-500 hover:text-slate-700">Cancel</button>
                                 <button type="submit" className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:-translate-y-0.5 transition-all">Submit</button>
                             </div>
                         </form>

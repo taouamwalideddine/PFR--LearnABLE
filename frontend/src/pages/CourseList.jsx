@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { BookOpen, Plus, MoreVertical, Search, GraduationCap, X } from 'lucide-react';
+import { BookOpen, Plus, Search, GraduationCap, X, Edit2, Trash2 } from 'lucide-react';
 
 const CourseList = () => {
     const [courses, setCourses] = useState([]);
@@ -9,10 +9,10 @@ const CourseList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     
-    // Form state
     const [newTitle, setNewTitle] = useState('');
     const [newDesc, setNewDesc] = useState('');
     const [newCategory, setNewCategory] = useState('GENERAL');
+    const [editingCourse, setEditingCourse] = useState(null);
 
     const navigate = useNavigate();
 
@@ -32,21 +32,52 @@ const CourseList = () => {
         }
     };
 
-    const handleCreateCourse = async (e) => {
+    const handleSaveCourse = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/courses', {
-                title: newTitle,
-                description: newDesc,
-                category: newCategory
-            });
+            if (editingCourse) {
+                await api.put(`/courses/${editingCourse.id}`, {
+                    title: newTitle,
+                    description: newDesc,
+                    category: newCategory
+                });
+            } else {
+                await api.post('/courses', {
+                    title: newTitle,
+                    description: newDesc,
+                    category: newCategory
+                });
+            }
             setShowAddModal(false);
             setNewTitle('');
             setNewDesc('');
+            setEditingCourse(null);
             fetchCourses();
         } catch (error) {
-            console.error('Error creating course', error);
-            alert("Failed to create course.");
+            console.error('Error saving course', error);
+            alert("Failed to save course.");
+        }
+    };
+
+    const handleEditCourse = (e, course) => {
+        e.stopPropagation();
+        setEditingCourse(course);
+        setNewTitle(course.title);
+        setNewDesc(course.description);
+        setNewCategory(course.category);
+        setShowAddModal(true);
+    };
+
+    const handleDeleteCourse = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to delete this course and all its modules?")) {
+            try {
+                await api.delete(`/courses/${id}`);
+                fetchCourses();
+            } catch (error) {
+                console.error(error);
+                alert("Failed to delete course");
+            }
         }
     };
 
@@ -76,7 +107,12 @@ const CourseList = () => {
                     </p>
                 </div>
                 <button 
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => {
+                        setEditingCourse(null);
+                        setNewTitle('');
+                        setNewDesc('');
+                        setShowAddModal(true);
+                    }}
                     className="flex items-center px-6 py-3.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:bg-indigo-700 transition-all font-medium whitespace-nowrap"
                 >
                     <Plus className="w-5 h-5 mr-2" />
@@ -126,12 +162,22 @@ const CourseList = () => {
                                 <span className={`px-3 py-1 rounded-xl text-xs font-black tracking-wider uppercase ${getCategoryColor(course.category)}`}>
                                     {course.category}
                                 </span>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); /* future context menu */ }}
-                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
-                                >
-                                    <MoreVertical className="w-5 h-5" />
-                                </button>
+                                <div className="flex space-x-1">
+                                    <button 
+                                        onClick={(e) => handleEditCourse(e, course)}
+                                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                                        title="Edit Course"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button 
+                                        onClick={(e) => handleDeleteCourse(e, course.id)}
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                                        title="Delete Course"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                             
                             <h3 className="text-2xl font-extrabold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors leading-tight">
@@ -160,12 +206,12 @@ const CourseList = () => {
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-bounce-in overflow-hidden">
                         <div className="px-8 py-6 flex justify-between items-center border-b border-slate-100 bg-slate-50">
-                            <h2 className="text-2xl font-extrabold text-slate-800">Draft New Course</h2>
+                            <h2 className="text-2xl font-extrabold text-slate-800">{editingCourse ? 'Edit Course' : 'Draft New Course'}</h2>
                             <button onClick={() => setShowAddModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <form onSubmit={handleCreateCourse} className="p-8 space-y-6">
+                        <form onSubmit={handleSaveCourse} className="p-8 space-y-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Course Title</label>
                                 <input
@@ -203,7 +249,7 @@ const CourseList = () => {
                             </div>
                             <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
                                 <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2.5 font-bold text-slate-500 hover:text-slate-700">Cancel</button>
-                                <button type="submit" className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:-translate-y-0.5 transition-all">Create Course</button>
+                                <button type="submit" className="px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:-translate-y-0.5 transition-all">{editingCourse ? 'Save Changes' : 'Create Course'}</button>
                             </div>
                         </form>
                     </div>

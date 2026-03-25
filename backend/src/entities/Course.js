@@ -40,5 +40,10 @@ module.exports = new EntitySchema({
             inverseSide: 'course',
             cascade: true,
         },
+        children: {
+            type: 'many-to-many',
+            target: 'Child',
+            inverseSide: 'courses',
+        },
     },
 });
