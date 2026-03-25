@@ -116,6 +116,40 @@ const getChildLessons = async (req, res) => {
     }
 };
 
+// @desc    Get all courses assigned to a child
+// @route   GET /api/children/:id/courses
+// @access  Private
+const getChildCourses = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['courses', 'courses.modules', 'courses.modules.lessons'],
+        });
+
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (child.courses) {
+            child.courses.forEach(course => {
+                if (course.modules) {
+                    course.modules.sort((a, b) => a.orderIndex - b.orderIndex);
+                    course.modules.forEach(mod => {
+                        if (mod.lessons) mod.lessons.sort((a, b) => a.orderIndex - b.orderIndex);
+                    });
+                }
+            });
+        }
+
+        res.json(child.courses || []);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error retrieving courses' });
+    }
+};
+
 // @desc    Assign a lesson to a child
 // @route   POST /api/children/:id/lessons
 // @access  Private
@@ -188,6 +222,7 @@ module.exports = {
     getChildById,
     updateChild,
     getChildLessons,
+    getChildCourses,
     assignLesson,
     removeLesson,
 };

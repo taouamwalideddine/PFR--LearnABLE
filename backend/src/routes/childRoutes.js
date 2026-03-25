@@ -5,6 +5,7 @@ const {
     getChildById,
     updateChild,
     getChildLessons,
+    getChildCourses,
     assignLesson,
     removeLesson,
 } = require('../controllers/childController');
@@ -33,5 +34,9 @@ router
 router
     .route('/:id/lessons/:lessonId')
     .delete(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), removeLesson);
+
+router
+    .route('/:id/courses')
+    .get(getChildCourses);
 
 module.exports = router;
