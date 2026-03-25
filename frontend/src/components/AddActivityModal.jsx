@@ -23,6 +23,11 @@ const AddActivityModal = ({ lessonId, onClose, onSuccess, initialData }) => {
         { text: 'Car', bucket: 2 }
     ]);
 
+    // Story Page / Info content
+    const [storyPages, setStoryPages] = useState([
+        { text: '', imageUrl: '' }
+    ]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -41,6 +46,8 @@ const AddActivityModal = ({ lessonId, onClose, onSuccess, initialData }) => {
                 setDdBucket1(data.bucket1 || 'Animals');
                 setDdBucket2(data.bucket2 || 'Vehicles');
                 setDdItems(data.items || [{ text: 'Dog', bucket: 1 }, { text: 'Car', bucket: 2 }]);
+            } else if (initialData.type === 'information_card') {
+                setStoryPages(data.pages || [{ text: '', imageUrl: '' }]);
             }
         }
     }, [initialData]);
@@ -58,6 +65,8 @@ const AddActivityModal = ({ lessonId, onClose, onSuccess, initialData }) => {
                 content = { targetEmotion, prompt: `Identify the emotion: ${targetEmotion}` };
             } else if (type === 'drag_drop') {
                 content = { bucket1: ddBucket1, bucket2: ddBucket2, items: ddItems };
+            } else if (type === 'information_card') {
+                content = { pages: storyPages };
             }
 
             const payload = {
@@ -148,6 +157,7 @@ const AddActivityModal = ({ lessonId, onClose, onSuccess, initialData }) => {
                                 <option value="multiple_choice">Multiple Choice</option>
                                 <option value="emotion_recognition">Emotion Recognition</option>
                                 <option value="drag_drop">Drag and Drop</option>
+                                <option value="information_card">Social Story / Info Card</option>
                             </select>
                         </div>
 
@@ -283,6 +293,64 @@ const AddActivityModal = ({ lessonId, onClose, onSuccess, initialData }) => {
                                             </button>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {type === 'information_card' && (
+                                <div className="space-y-4 text-slate-700">
+                                    <p className="text-sm font-bold text-slate-500 mb-4">Create a multi-page story or explanation. Children will read through these pages sequentially.</p>
+                                    
+                                    {storyPages.map((page, idx) => (
+                                        <div key={idx} className="p-4 bg-white border border-slate-200 rounded-xl mb-4 relative shadow-sm">
+                                            <div className="absolute top-2 right-2">
+                                                {storyPages.length > 1 && (
+                                                    <button type="button" onClick={() => setStoryPages(storyPages.filter((_, i) => i !== idx))} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-slate-700 mb-3">Page {idx + 1}</h4>
+                                            
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">Image URL (Optional)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={page.imageUrl}
+                                                        onChange={(e) => {
+                                                            const newPages = [...storyPages];
+                                                            newPages[idx].imageUrl = e.target.value;
+                                                            setStoryPages(newPages);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none"
+                                                        placeholder="https://example.com/image.png"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">Text / Story Content</label>
+                                                    <textarea
+                                                        required
+                                                        value={page.text}
+                                                        onChange={(e) => {
+                                                            const newPages = [...storyPages];
+                                                            newPages[idx].text = e.target.value;
+                                                            setStoryPages(newPages);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm min-h-[80px] outline-none"
+                                                        placeholder="Once upon a time..."
+                                                    ></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setStoryPages([...storyPages, { text: '', imageUrl: '' }])} 
+                                        className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center mt-2 px-3 py-2 bg-white border border-indigo-100 rounded-lg shadow-sm"
+                                    >
+                                        <Plus className="w-4 h-4 mr-1" /> Add Page
+                                    </button>
                                 </div>
                             )}
                         </div>
