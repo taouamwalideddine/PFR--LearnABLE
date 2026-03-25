@@ -74,6 +74,7 @@ module.exports = new EntitySchema({
         courses: {
             type: 'many-to-many',
             target: 'Course',
+            inverseSide: 'children',
             joinTable: {
                 name: 'child_courses',
                 joinColumn: {
