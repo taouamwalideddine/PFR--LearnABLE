@@ -84,10 +84,40 @@ const deleteCourse = async (req, res) => {
     }
 };
 
+const assignCourse = async (req, res) => {
+    try {
+        const courseRepo = AppDataSource.getRepository('Course');
+        const childRepo = AppDataSource.getRepository('Child');
+        const course = await courseRepo.findOne({
+            where: { id: req.params.id },
+            relations: ['children'] // must load relation to append
+        });
+        const child = await childRepo.findOne({ where: { id: req.body.childId } });
+        
+        if (!course || !child) return res.status(404).json({ message: 'Course or Child not found' });
+        
+        if (!course.children) {
+            course.children = [];
+        }
+
+        // Prevent duplicate assignment
+        if (!course.children.some(c => c.id === child.id)) {
+            course.children.push(child);
+            await courseRepo.save(course);
+        }
+        
+        res.json({ message: 'Course assigned successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     createCourse,
     getCourses,
     getCourseById,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    assignCourse
 };

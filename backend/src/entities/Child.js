@@ -71,5 +71,20 @@ module.exports = new EntitySchema({
                 }
             },
         },
+        courses: {
+            type: 'many-to-many',
+            target: 'Course',
+            joinTable: {
+                name: 'child_courses',
+                joinColumn: {
+                    name: 'childId',
+                    referencedColumnName: 'id'
+                },
+                inverseJoinColumn: {
+                    name: 'courseId',
+                    referencedColumnName: 'id'
+                }
+            },
+        },
     },
 });
