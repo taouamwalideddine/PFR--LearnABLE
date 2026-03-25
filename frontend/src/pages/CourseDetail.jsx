@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { ArrowLeft, Plus, FolderTree, Book, MoreVertical, X, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, FolderTree, Book, MoreVertical, X, Calendar, UserPlus } from 'lucide-react';
+import AssignCourseModal from '../components/AssignCourseModal';
 
 const CourseDetail = () => {
     const { courseId } = useParams();
@@ -12,6 +13,7 @@ const CourseDetail = () => {
     // Modals
     const [showModuleModal, setShowModuleModal] = useState(false);
     const [showLessonModal, setShowLessonModal] = useState(false);
+    const [showAssignModal, setShowAssignModal] = useState(false);
     const [activeModuleId, setActiveModuleId] = useState(null);
 
     // Form states
@@ -103,17 +105,26 @@ const CourseDetail = () => {
                         {course.description || "No description provided."}
                     </p>
                 </div>
-                <button 
-                    onClick={() => {
-                        setTitle('');
-                        setDesc('');
-                        setShowModuleModal(true);
-                    }}
-                    className="flex text-lg items-center px-6 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                    <Plus className="w-5 h-5 mr-3" />
-                    Add Module
-                </button>
+                <div className="flex flex-col gap-3">
+                    <button 
+                        onClick={() => setShowAssignModal(true)}
+                        className="flex text-lg items-center justify-center px-6 py-3 bg-white text-indigo-600 border-2 border-indigo-100 font-bold rounded-2xl hover:bg-indigo-50 hover:border-indigo-200 transition-all font-medium whitespace-nowrap"
+                    >
+                        <UserPlus className="w-5 h-5 mr-3" />
+                        Assign to Child
+                    </button>
+                    <button 
+                        onClick={() => {
+                            setTitle('');
+                            setDesc('');
+                            setShowModuleModal(true);
+                        }}
+                        className="flex text-lg items-center justify-center px-6 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    >
+                        <Plus className="w-5 h-5 mr-3" />
+                        Add Module
+                    </button>
+                </div>
             </div>
 
             <div className="space-y-8">
@@ -218,6 +229,14 @@ const CourseDetail = () => {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Modal for Assigning Course */}
+            {showAssignModal && (
+                <AssignCourseModal 
+                    course={course} 
+                    onClose={() => setShowAssignModal(false)} 
+                />
             )}
         </div>
     );
