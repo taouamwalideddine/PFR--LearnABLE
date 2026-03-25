@@ -4,7 +4,7 @@ const AppDataSource = require('../config/data-source');
 // @route   POST /api/lessons
 // @access  Private (Educator/Admin)
 const createLesson = async (req, res) => {
-    const { title, category, description, difficulty } = req.body;
+    const { title, category, description, difficulty, moduleId, orderIndex } = req.body;
 
     try {
         const repo = AppDataSource.getRepository('Lesson');
@@ -13,6 +13,8 @@ const createLesson = async (req, res) => {
             category,
             description,
             difficulty: parseInt(difficulty) || 1,
+            moduleId: moduleId || null,
+            orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : 0,
         });
 
         const lesson = await repo.save(newLesson);

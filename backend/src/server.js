@@ -8,6 +8,8 @@ const childRoutes = require('./routes/childRoutes');
 const lessonRoutes = require('./routes/lessonRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const progressRoutes = require('./routes/progressRoutes');
+const courseRoutes = require('./routes/courseRoutes');
+const moduleRoutes = require('./routes/moduleRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +24,8 @@ app.use('/api/children', childRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/modules', moduleRoutes);
 app.use('/api/rewards', require('./routes/rewardRoutes'));
 
 const AppDataSource = require('./config/data-source');

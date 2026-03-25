@@ -9,6 +9,8 @@ const AppDataSource = new DataSource({
     entities: [
         require('../entities/User'),
         require('../entities/Child'),
+        require('../entities/Course'),
+        require('../entities/Module'),
         require('../entities/Lesson'),
         require('../entities/Activity'),
         require('../entities/Progress'),

@@ -1,8 +1,8 @@
 const { EntitySchema } = require('typeorm');
 
 module.exports = new EntitySchema({
-    name: 'Lesson',
-    tableName: 'lessons',
+    name: 'Module',
+    tableName: 'modules',
     columns: {
         id: {
             primary: true,
@@ -12,24 +12,16 @@ module.exports = new EntitySchema({
         title: {
             type: 'varchar',
         },
-        category: {
-            type: 'varchar',
-        },
         description: {
             type: 'text',
-            nullable: true,
-        },
-        difficulty: {
-            type: 'int',
-            default: 1,
-        },
-        moduleId: {
-            type: 'uuid',
             nullable: true,
         },
         orderIndex: {
             type: 'int',
             default: 0,
+        },
+        courseId: {
+            type: 'uuid',
         },
         createdAt: {
             type: 'timestamp',
@@ -41,22 +33,18 @@ module.exports = new EntitySchema({
         },
     },
     relations: {
-        module: {
+        course: {
             type: 'many-to-one',
-            target: 'Module',
-            joinColumn: { name: 'moduleId' },
-            inverseSide: 'lessons',
+            target: 'Course',
+            joinColumn: { name: 'courseId' },
+            inverseSide: 'modules',
             onDelete: 'CASCADE',
         },
-        activities: {
+        lessons: {
             type: 'one-to-many',
-            target: 'Activity',
-            inverseSide: 'lesson',
-        },
-        children: {
-            type: 'many-to-many',
-            target: 'Child',
-            // The join table is defined in the Child entity
+            target: 'Lesson',
+            inverseSide: 'module',
+            cascade: true,
         },
     },
 });
