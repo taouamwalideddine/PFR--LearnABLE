@@ -17,6 +17,8 @@ const AppDataSource = new DataSource({
         require('../entities/Reward'),
         require('../entities/Post'),
         require('../entities/Comment'),
+        require('../entities/Routine'),
+        require('../entities/RoutineStep'),
     ],
 });
 
