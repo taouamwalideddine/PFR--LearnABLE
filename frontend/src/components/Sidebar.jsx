@@ -9,7 +9,8 @@ import {
     MessageSquare,
     LogOut,
     Menu,
-    X
+    X,
+    Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 

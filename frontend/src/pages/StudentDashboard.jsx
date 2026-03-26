@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { PlayCircle, Award, Smile, Map } from 'lucide-react';
 import RewardGallery from '../components/rewards/RewardGallery';
+import NowAndNextBoard from '../components/routines/NowAndNextBoard';
 import api from '../api/axios';
 
 const StudentDashboard = () => {
@@ -33,6 +34,9 @@ const StudentDashboard = () => {
                     </h1>
                     <p className="text-2xl text-slate-600 font-medium">What would you like to do today?</p>
                 </header>
+
+                {/* Autonomy Timeline (Module 4) */}
+                <NowAndNextBoard childId={activeChild.id} />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
                     

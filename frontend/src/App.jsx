@@ -14,7 +14,6 @@ import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import ProgressDashboard from './pages/ProgressDashboard';
 import EmotionsModule from './pages/EmotionsModule';
-import EmotionsModule from './pages/EmotionsModule';
 import StudentCourseMap from './pages/StudentCourseMap';
 import RoutineList from './pages/RoutineList';
 import RoutineDetail from './pages/RoutineDetail';
