@@ -10,6 +10,7 @@ const activityRoutes = require('./routes/activityRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
+const routineRoutes = require('./routes/routineRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/modules', moduleRoutes);
+app.use('/api/routines', routineRoutes);
 app.use('/api/rewards', require('./routes/rewardRoutes'));
 
 const AppDataSource = require('./config/data-source');
