@@ -50,6 +50,25 @@ const createRoutine = async (req, res) => {
     }
 };
 
+// @desc    Get routine by ID
+// @route   GET /api/routines/:id
+// @access  Private
+const getRoutineById = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Routine');
+        const routine = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['steps'],
+        });
+        if (!routine) return res.status(404).json({ message: 'Routine not found' });
+        
+        res.json(routine);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // @desc    Add a step to a routine
 // @route   POST /api/routines/:id/steps
 // @access  Private
@@ -111,6 +130,7 @@ const deleteRoutineStep = async (req, res) => {
 
 module.exports = {
     getChildRoutines,
+    getRoutineById,
     createRoutine,
     addRoutineStep,
     deleteRoutine,

@@ -14,7 +14,10 @@ import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import ProgressDashboard from './pages/ProgressDashboard';
 import EmotionsModule from './pages/EmotionsModule';
+import EmotionsModule from './pages/EmotionsModule';
 import StudentCourseMap from './pages/StudentCourseMap';
+import RoutineList from './pages/RoutineList';
+import RoutineDetail from './pages/RoutineDetail';
 import Sidebar from './components/Sidebar';
 
 // A component to intelligently route between dashboards based on activeChild
@@ -78,6 +81,22 @@ function AppContent() {
                             element={
                                 <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
                                     <CourseDetail />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/routines"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <RoutineList />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/routines/:id"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <RoutineDetail />
                                 </ProtectedRoute>
                             }
                         />

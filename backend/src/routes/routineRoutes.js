@@ -1,6 +1,7 @@
 const express = require('express');
 const {
     getChildRoutines,
+    getRoutineById,
     createRoutine,
     addRoutineStep,
     deleteRoutine,
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/child/:childId', getChildRoutines);
+router.get('/:id', getRoutineById);
 
 // Only authorized adults can build routines
 router.post('/', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), createRoutine);
