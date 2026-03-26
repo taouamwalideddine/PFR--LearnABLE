@@ -10,6 +10,8 @@ const StudentCourseMap = () => {
     const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [completedLessons, setCompletedLessons] = useState(new Set());
+    const [unlockedLessons, setUnlockedLessons] = useState(new Set());
 
     useEffect(() => {
         if (!activeChild) {
@@ -22,8 +24,34 @@ const StudentCourseMap = () => {
     const fetchCourseAndProgress = async () => {
         try {
             const courseRes = await api.get(`/courses/${courseId}`);
-            setCourse(courseRes.data);
-            // Future enhancement: Fetch progress here to lock/unlock nodes
+            const courseData = courseRes.data;
+            setCourse(courseData);
+            
+            const progressRes = await api.get(`/progress/child/${activeChild.id}`);
+            const completedIds = new Set();
+            progressRes.data.forEach(p => {
+                if (p.completed && p.activity && p.activity.lesson) {
+                    completedIds.add(p.activity.lesson.id);
+                }
+            });
+            setCompletedLessons(completedIds);
+
+            // Compute locked status sequentially
+            const unlockedIds = new Set();
+            let currentUnlocked = true;
+            
+            courseData.modules?.forEach(mdl => {
+                mdl.lessons?.forEach(lsn => {
+                    if (currentUnlocked) {
+                        unlockedIds.add(lsn.id);
+                    }
+                    if (!completedIds.has(lsn.id)) {
+                        currentUnlocked = false;
+                    }
+                });
+            });
+            setUnlockedLessons(unlockedIds);
+
         } catch (error) {
             console.error('Failed to load map', error);
         } finally {
@@ -84,23 +112,39 @@ const StudentCourseMap = () => {
                                 {module.lessons?.map((lesson, lIdx) => {
                                     // Calculate zigzag position
                                     const isLeft = lIdx % 2 === 0;
+                                    const isCompleted = completedLessons.has(lesson.id);
+                                    const isUnlocked = unlockedLessons.has(lesson.id);
                                     
                                     return (
                                         <div key={lesson.id} className={`flex items-center w-full relative sm:h-32`}>
                                             <div className={`w-full sm:w-1/2 flex justify-center sm:absolute sm:${isLeft ? 'left-0 pr-16 justify-end' : 'right-0 pl-16 justify-start'}`}>
                                                 
                                                 <div 
-                                                    onClick={() => navigate(`/lessons/${lesson.id}`)}
-                                                    className="group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 relative flex flex-col items-center"
+                                                    onClick={() => isUnlocked && navigate(`/lessons/${lesson.id}`)}
+                                                    className={`group ${isUnlocked ? 'cursor-pointer transform hover:-translate-y-2' : 'cursor-not-allowed opacity-70 filter grayscale'} transition-all duration-300 relative flex flex-col items-center`}
                                                 >
                                                     {/* The Stepping Stone */}
-                                                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-[0_8px_0_rgb(203,213,225)] border-4 border-slate-200 group-hover:border-indigo-400 group-hover:shadow-[0_8px_0_rgb(129,140,248)] z-20 relative mb-4 flex-shrink-0">
-                                                        <Play className="w-10 h-10 text-indigo-500 translate-x-1" />
+                                                    <div className={`w-28 h-28 rounded-full flex items-center justify-center shadow-[0_8px_0_rgb(203,213,225)] border-4 z-20 relative mb-4 flex-shrink-0 transition-all ${
+                                                        isCompleted ? 'bg-emerald-400 border-white shadow-[0_8px_0_rgb(52,211,153)] ring-4 ring-emerald-200' : 
+                                                        isUnlocked ? 'bg-white border-amber-300 group-hover:border-amber-400 group-hover:shadow-[0_8px_0_rgb(251,191,36)] ring-4 ring-amber-100' : 
+                                                        'bg-slate-200 border-slate-300'
+                                                    }`}>
+                                                        {isCompleted ? (
+                                                            <CheckCircle className="w-14 h-14 text-white" />
+                                                        ) : isUnlocked ? (
+                                                            <Star className="w-12 h-12 text-amber-500 fill-amber-300 animate-pulse" />
+                                                        ) : (
+                                                            <Lock className="w-10 h-10 text-slate-400" />
+                                                        )}
                                                     </div>
                                                     
                                                     {/* Label */}
-                                                    <div className="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-3xl shadow-lg border-2 border-slate-100 text-center mx-auto min-w-[200px] max-w-[250px] group-hover:border-indigo-200 transition-colors">
-                                                        <h4 className="font-extrabold text-slate-800 text-xl">{lesson.title}</h4>
+                                                    <div className={`backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border-2 text-center mx-auto min-w-[200px] max-w-[250px] transition-colors ${
+                                                        isCompleted ? 'bg-emerald-50 border-emerald-200' :
+                                                        isUnlocked ? 'bg-white/90 border-slate-100 group-hover:border-amber-200' : 
+                                                        'bg-slate-100 border-slate-200'
+                                                    }`}>
+                                                        <h4 className={`font-extrabold text-xl ${isCompleted ? 'text-emerald-800' : isUnlocked ? 'text-slate-800' : 'text-slate-500'}`}>{lesson.title}</h4>
                                                     </div>
                                                 </div>
                                                 
