@@ -87,5 +87,21 @@ module.exports = new EntitySchema({
                 }
             },
         },
+        routines: {
+            type: 'many-to-many',
+            target: 'Routine',
+            inverseSide: 'children',
+            joinTable: {
+                name: 'child_routines',
+                joinColumn: {
+                    name: 'childId',
+                    referencedColumnName: 'id'
+                },
+                inverseJoinColumn: {
+                    name: 'routineId',
+                    referencedColumnName: 'id'
+                }
+            },
+        },
     },
 });

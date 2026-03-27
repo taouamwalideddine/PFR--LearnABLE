@@ -21,9 +21,6 @@ module.exports = new EntitySchema({
             type: 'varchar',
             default: 'DAILY', // DAILY, SPECIAL_EVENT, WEEKEND
         },
-        childId: {
-            type: 'uuid',
-        },
         creatorId: {
             type: 'uuid', // The parent or educator who made it
         },
@@ -41,10 +38,10 @@ module.exports = new EntitySchema({
         },
     },
     relations: {
-        child: {
-            type: 'many-to-one',
+        children: {
+            type: 'many-to-many',
             target: 'Child',
-            joinColumn: { name: 'childId' },
+            inverseSide: 'routines',
         },
         creator: {
             type: 'many-to-one',
