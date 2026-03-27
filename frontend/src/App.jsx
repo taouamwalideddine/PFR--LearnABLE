@@ -17,6 +17,8 @@ import EmotionsModule from './pages/EmotionsModule';
 import StudentCourseMap from './pages/StudentCourseMap';
 import RoutineList from './pages/RoutineList';
 import RoutineDetail from './pages/RoutineDetail';
+import ClassroomDashboard from './pages/ClassroomDashboard';
+import IEPReport from './pages/IEPReport';
 import Sidebar from './components/Sidebar';
 
 // A component to intelligently route between dashboards based on activeChild
@@ -128,6 +130,22 @@ function AppContent() {
                             element={
                                 <ProtectedRoute>
                                     <StudentCourseMap />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/analytics"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <ClassroomDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/analytics/report/:childId"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <IEPReport />
                                 </ProtectedRoute>
                             }
                         />
