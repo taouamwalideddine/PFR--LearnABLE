@@ -41,13 +41,13 @@ const Sidebar = () => {
 
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'My Children', href: '/children', icon: Users, hidden: user?.role === 'EDUCATEUR' || user?.role === 'ENFANT' },
+        { name: 'My Children', href: '/children', icon: Users, hidden: user?.role !== 'PARENT' && user?.role !== 'ADMIN' },
+        { name: 'My Students', href: '/my-students', icon: Users, hidden: user?.role !== 'EDUCATEUR' },
         { name: 'Curriculum', href: '/curriculum', icon: GraduationCap, hidden: user?.role === 'ENFANT' },
         { name: 'Routines', href: '/routines', icon: Calendar, hidden: user?.role === 'ENFANT' },
         { name: 'Classroom Insights', href: '/classroom', icon: BarChart3, hidden: user?.role === 'ENFANT' },
         { name: 'Access & Linking', href: '/access', icon: Shield, hidden: user?.role === 'ENFANT' },
         { name: 'Emotions Demo', href: '/emotions', icon: Smile },
-        // { name: 'Community Forum', href: '/forum', icon: MessageSquare }, // Coming soon
     ];
 
     const isActive = (path) => location.pathname.startsWith(path);

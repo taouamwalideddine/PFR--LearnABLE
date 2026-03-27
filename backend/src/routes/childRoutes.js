@@ -18,7 +18,7 @@ router.use(protect); // All child routes need protection
 
 router
     .route('/')
-    .post(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), createChild)
+    .post(authorize('PARENT', 'ADMIN'), createChild)
     .get(getChildren);
 
 router

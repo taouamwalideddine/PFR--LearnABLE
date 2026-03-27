@@ -61,9 +61,22 @@ const getClassroomAnalytics = async (req, res) => {
         const childRepo = AppDataSource.getRepository('Child');
         const progressRepo = AppDataSource.getRepository('Progress');
 
-        const children = await childRepo.find({
-            where: { parentId: req.user.id },
-        });
+        let children = [];
+
+        if (req.user.role === 'EDUCATEUR') {
+            // Educators see students linked via access codes
+            const linkRepo = AppDataSource.getRepository('EducatorChild');
+            const links = await linkRepo.find({
+                where: { educatorId: req.user.id },
+                relations: ['child'],
+            });
+            children = links.map(l => l.child).filter(Boolean);
+        } else {
+            // Parents/Admins see children they own
+            children = await childRepo.find({
+                where: { parentId: req.user.id },
+            });
+        }
 
         const results = [];
         for (const child of children) {
