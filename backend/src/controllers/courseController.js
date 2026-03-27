@@ -73,9 +73,16 @@ const updateCourse = async (req, res) => {
 const deleteCourse = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Course');
-        const course = await repo.findOne({ where: { id: req.params.id } });
+        const course = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['children'],
+        });
         if (!course) return res.status(404).json({ message: 'Course not found' });
         
+        // Detach all children from the course before deleting
+        course.children = [];
+        await repo.save(course);
+
         await repo.remove(course);
         res.json({ message: 'Course removed' });
     } catch (error) {
