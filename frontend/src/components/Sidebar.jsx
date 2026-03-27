@@ -43,7 +43,7 @@ const Sidebar = () => {
         { name: 'My Children', href: '/children', icon: Users, hidden: user?.role === 'EDUCATEUR' || user?.role === 'ENFANT' },
         { name: 'Curriculum', href: '/curriculum', icon: GraduationCap, hidden: user?.role === 'ENFANT' },
         { name: 'Routines', href: '/routines', icon: Calendar, hidden: user?.role === 'ENFANT' },
-        { name: 'Analytics', href: '/analytics', icon: BarChart3, hidden: user?.role === 'ENFANT' },
+        { name: 'Classroom Insights', href: '/classroom', icon: BarChart3, hidden: user?.role === 'ENFANT' },
         { name: 'Emotions Demo', href: '/emotions', icon: Smile },
         // { name: 'Community Forum', href: '/forum', icon: MessageSquare }, // Coming soon
     ];

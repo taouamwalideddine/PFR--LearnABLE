@@ -102,6 +102,14 @@ function AppContent() {
                             }
                         />
                         <Route
+                            path="/classroom"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <ClassroomDashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
                             path="/lessons/:id"
                             element={
                                 <ProtectedRoute roles={['EDUCATEUR', 'ADMIN', 'PARENT']}>
@@ -118,6 +126,14 @@ function AppContent() {
                             }
                         />
                         <Route
+                            path="/report/:childId"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <IEPReport />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
                             path="/emotions"
                             element={
                                 <ProtectedRoute>
@@ -130,22 +146,6 @@ function AppContent() {
                             element={
                                 <ProtectedRoute>
                                     <StudentCourseMap />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/analytics"
-                            element={
-                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
-                                    <ClassroomDashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/analytics/report/:childId"
-                            element={
-                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
-                                    <IEPReport />
                                 </ProtectedRoute>
                             }
                         />

@@ -1,230 +1,300 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
-import { FileText, ArrowLeft, Printer, TrendingUp, Award, Clock, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-
-const CATEGORY_LABELS = {
-    LANGAGE: 'Language',
-    MATH: 'Mathematics',
-    EMOTIONS: 'Emotions',
-    SOCIAL: 'Social Skills',
-    VIE_QUOTIDIENNE: 'Daily Living',
-    GENERAL: 'General',
-};
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { FileText, Download, ArrowLeft, User, Target, Clock, Activity, BarChart3 } from 'lucide-react';
 
 const IEPReport = () => {
     const { childId } = useParams();
-    const navigate = useNavigate();
-    const reportRef = useRef(null);
-    const [data, setData] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [child, setChild] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
-        fetchReport();
+        fetchData();
     }, [childId]);
 
-    const fetchReport = async () => {
+    const fetchData = async () => {
         try {
-            const res = await api.get(`/analytics/child/${childId}`);
-            setData(res.data);
-        } catch (err) {
-            console.error(err);
+            const [statsRes, catRes, histRes, childRes] = await Promise.all([
+                api.get(`/progress/stats/${childId}`),
+                api.get(`/progress/categories/${childId}`),
+                api.get(`/progress/child/${childId}`),
+                api.get(`/children/${childId}`),
+            ]);
+            setStats(statsRes.data);
+            setCategories(catRes.data);
+            setHistory(histRes.data);
+            setChild(childRes.data);
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    const generatePDF = () => {
+        setGenerating(true);
+        try {
+            const doc = new jsPDF();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const formatTime = (seconds) => {
-        if (!seconds) return '0 minutes';
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        return h > 0 ? `${h} hours ${m} minutes` : `${m} minutes`;
+            // Header
+            doc.setFillColor(99, 102, 241);
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LearnAble — IEP Progress Report', 14, 22);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Generated: ${dateStr}`, 14, 32);
+
+            // Student Info
+            doc.setTextColor(30, 41, 59);
+            let y = 55;
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Student Information', 14, y);
+            y += 10;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Name: ${child?.name || 'N/A'}`, 14, y);
+            y += 7;
+            doc.text(`Age: ${child?.age || 'N/A'} years`, 14, y);
+            y += 7;
+            doc.text(`Learning Pace: ${child?.learningPace || 'Standard'}`, 14, y);
+            y += 7;
+            doc.text(`Difficulty Level: ${child?.difficultyLevel || 1}`, 14, y);
+            y += 15;
+
+            // Performance Summary
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Performance Summary', 14, y);
+            y += 3;
+
+            autoTable(doc, {
+                startY: y,
+                head: [['Metric', 'Value']],
+                body: [
+                    ['Total Activities Attempted', String(stats?.totalActivitiesAttempted || 0)],
+                    ['Total Activities Completed', String(stats?.totalActivitiesCompleted || 0)],
+                    ['Average Success Rate', `${Math.round(stats?.averageSuccessRate || 0)}%`],
+                    ['Total Learning Time', `${Math.round((stats?.totalTimeSpentSeconds || 0) / 60)} minutes`],
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: [99, 102, 241], font: 'helvetica', fontStyle: 'bold' },
+                styles: { font: 'helvetica', fontSize: 10 },
+                margin: { left: 14 },
+            });
+
+            y = doc.lastAutoTable.finalY + 15;
+
+            // Category Breakdown
+            if (categories.length > 0) {
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Success by Category', 14, y);
+                y += 3;
+
+                autoTable(doc, {
+                    startY: y,
+                    head: [['Category', 'Activities', 'Success Rate']],
+                    body: categories.map(c => [
+                        c.category,
+                        String(c.count),
+                        `${Math.round(c.avgSuccess)}%`,
+                    ]),
+                    theme: 'striped',
+                    headStyles: { fillColor: [16, 185, 129], font: 'helvetica', fontStyle: 'bold' },
+                    styles: { font: 'helvetica', fontSize: 10 },
+                    margin: { left: 14 },
+                });
+
+                y = doc.lastAutoTable.finalY + 15;
+            }
+
+            // Recent Activity Log
+            if (history.length > 0) {
+                if (y > 240) {
+                    doc.addPage();
+                    y = 20;
+                }
+
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Recent Activity Log', 14, y);
+                y += 3;
+
+                const recentItems = history.slice(0, 15).map(item => [
+                    new Date(item.timestamp).toLocaleDateString(),
+                    item.activity?.title || 'Unknown',
+                    item.completed ? 'Yes' : 'No',
+                    `${Math.round(item.successRate)}%`,
+                    `${Math.round(item.timeSpent / 60)}m`,
+                ]);
+
+                autoTable(doc, {
+                    startY: y,
+                    head: [['Date', 'Activity', 'Completed', 'Score', 'Time']],
+                    body: recentItems,
+                    theme: 'striped',
+                    headStyles: { fillColor: [245, 158, 11], font: 'helvetica', fontStyle: 'bold' },
+                    styles: { font: 'helvetica', fontSize: 9 },
+                    margin: { left: 14 },
+                });
+
+                y = doc.lastAutoTable.finalY + 15;
+            }
+
+            // Footer
+            if (y > 260) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setDrawColor(200, 200, 200);
+            doc.line(14, y, 196, y);
+            y += 8;
+            doc.setFontSize(9);
+            doc.setTextColor(150, 150, 150);
+            doc.text('This report was automatically generated by the LearnAble platform.', 14, y);
+            doc.text('For questions, contact the assigned educator or administrator.', 14, y + 5);
+            doc.text(`Confidential — ${dateStr}`, 14, y + 10);
+
+            doc.save(`IEP_Report_${child?.name || 'Student'}_${now.toISOString().slice(0, 10)}.pdf`);
+        } catch (e) {
+            console.error('PDF generation failed:', e);
+        } finally {
+            setGenerating(false);
+        }
     };
 
     if (loading) return (
-        <div className="p-10 flex justify-center items-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
-        </div>
+        <div className="p-10 flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div></div>
     );
-
-    if (!data) return (
-        <div className="p-10 text-center">
-            <p className="text-slate-500">Failed to load report data.</p>
-        </div>
-    );
-
-    const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <div className="min-h-screen bg-slate-100">
-            {/* Action bar (hidden on print) */}
-            <div className="print:hidden bg-white border-b border-slate-200 px-10 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
-                <button onClick={() => navigate(-1)} className="flex items-center text-slate-600 font-bold hover:text-indigo-600 transition-colors">
-                    <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
-                </button>
-                <button onClick={handlePrint} className="flex items-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-all">
-                    <Printer className="w-5 h-5 mr-2" /> Print / Save as PDF
+        <div className="p-8 lg:p-10 max-w-5xl mx-auto min-h-screen">
+            <Link to="/classroom" className="flex items-center text-slate-500 hover:text-slate-700 mb-8 transition font-medium">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Classroom
+            </Link>
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight flex items-center mb-3">
+                        <FileText className="w-10 h-10 mr-4 text-indigo-600" />
+                        IEP Report Preview
+                    </h1>
+                    <p className="text-slate-500 text-lg font-medium">
+                        Review the data below, then export a professional PDF for IEP meetings.
+                    </p>
+                </div>
+                <button
+                    onClick={generatePDF}
+                    disabled={generating}
+                    className="flex items-center px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:bg-indigo-700 transition-all disabled:opacity-50 whitespace-nowrap"
+                >
+                    <Download className="w-5 h-5 mr-2" />
+                    {generating ? 'Generating...' : 'Export PDF'}
                 </button>
             </div>
 
-            {/* Printable Report */}
-            <div ref={reportRef} className="max-w-4xl mx-auto p-10 print:p-0 print:max-w-none">
-                <div className="bg-white rounded-3xl print:rounded-none shadow-xl print:shadow-none border border-slate-100 print:border-none overflow-hidden">
-                    {/* REPORT HEADER */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-10 print:p-8">
-                        <div className="flex items-center mb-2">
-                            <FileText className="w-8 h-8 mr-3" />
-                            <span className="text-sm font-bold uppercase tracking-widest opacity-80">LearnAble™ — IEP Progress Report</span>
-                        </div>
-                        <h1 className="text-4xl font-extrabold mb-2">{data.child.name}</h1>
-                        <p className="text-lg opacity-80 font-medium">Age {data.child.age} · Report generated on {reportDate}</p>
-                    </div>
-
-                    {/* EXECUTIVE SUMMARY */}
-                    <div className="p-10 print:p-8 border-b border-slate-100">
-                        <h2 className="text-2xl font-extrabold text-slate-800 mb-6 flex items-center">
-                            <BarChart3 className="w-6 h-6 mr-2 text-indigo-500" /> Executive Summary
-                        </h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div className="text-center bg-indigo-50 p-5 rounded-2xl">
-                                <Award className="w-7 h-7 mx-auto text-indigo-600 mb-2" />
-                                <p className="text-3xl font-extrabold text-indigo-600">{data.overall.totalCompleted}</p>
-                                <p className="text-sm font-bold text-slate-500">Activities Completed</p>
-                            </div>
-                            <div className="text-center bg-purple-50 p-5 rounded-2xl">
-                                <TrendingUp className="w-7 h-7 mx-auto text-purple-600 mb-2" />
-                                <p className="text-3xl font-extrabold text-purple-600">{data.overall.avgSuccess.toFixed(0)}%</p>
-                                <p className="text-sm font-bold text-slate-500">Average Success Rate</p>
-                            </div>
-                            <div className="text-center bg-emerald-50 p-5 rounded-2xl">
-                                <Clock className="w-7 h-7 mx-auto text-emerald-600 mb-2" />
-                                <p className="text-3xl font-extrabold text-emerald-600">{formatTime(data.overall.totalTimeSeconds)}</p>
-                                <p className="text-sm font-bold text-slate-500">Total Learning Time</p>
-                            </div>
-                            <div className="text-center bg-amber-50 p-5 rounded-2xl">
-                                <BarChart3 className="w-7 h-7 mx-auto text-amber-600 mb-2" />
-                                <p className="text-3xl font-extrabold text-amber-600">{data.overall.totalAttempted}</p>
-                                <p className="text-sm font-bold text-slate-500">Total Attempts</p>
-                            </div>
-                        </div>
-                        {data.overall.firstActivity && (
-                            <p className="mt-6 text-sm text-slate-500 font-medium">
-                                Tracking period: {new Date(data.overall.firstActivity).toLocaleDateString()} — {new Date(data.overall.lastActivity).toLocaleDateString()}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* CATEGORY PERFORMANCE */}
-                    <div className="p-10 print:p-8 border-b border-slate-100">
-                        <h2 className="text-2xl font-extrabold text-slate-800 mb-6">Category Performance Breakdown</h2>
-                        {data.categoryBreakdown.length > 0 ? (
-                            <>
-                                <div className="print:hidden mb-6">
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <RadarChart data={data.categoryBreakdown.map(c => ({
-                                            subject: CATEGORY_LABELS[c.category] || c.category,
-                                            score: c.avgSuccess,
-                                            fullMark: 100,
-                                        }))}>
-                                            <PolarGrid stroke="#e2e8f0" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fontWeight: 700, fill: '#475569' }} />
-                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
-                                            <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.25} strokeWidth={2} />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b-2 border-slate-200">
-                                            <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider">Category</th>
-                                            <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider text-center">Attempted</th>
-                                            <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider text-center">Completed</th>
-                                            <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider text-center">Avg. Success</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.categoryBreakdown.map((cat, idx) => (
-                                            <tr key={idx} className="border-b border-slate-100">
-                                                <td className="py-4 font-bold text-slate-700">{CATEGORY_LABELS[cat.category] || cat.category}</td>
-                                                <td className="py-4 text-center font-bold text-slate-600">{cat.attempts}</td>
-                                                <td className="py-4 text-center font-bold text-slate-600">{cat.completed}</td>
-                                                <td className="py-4 text-center">
-                                                    <span className={`px-3 py-1 rounded-lg font-extrabold text-sm ${cat.avgSuccess >= 70 ? 'bg-emerald-100 text-emerald-700' : cat.avgSuccess >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
-                                                        {cat.avgSuccess.toFixed(0)}%
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </>
-                        ) : (
-                            <p className="text-slate-400 font-medium">No category data available yet.</p>
-                        )}
-                    </div>
-
-                    {/* 30-DAY TREND */}
-                    <div className="p-10 print:p-8 border-b border-slate-100 print:hidden">
-                        <h2 className="text-2xl font-extrabold text-slate-800 mb-6">30-Day Activity Trend</h2>
-                        {data.dailyTrend.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={data.dailyTrend}>
-                                    <XAxis dataKey="date" tick={{ fontSize: 10, fontWeight: 600, fill: '#94a3b8' }} tickFormatter={(v) => v.slice(5)} />
-                                    <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} />
-                                    <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontWeight: 700 }} />
-                                    <Bar dataKey="activitiesCount" name="Activities" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <p className="text-slate-400 font-medium">No recent activity data.</p>
-                        )}
-                    </div>
-
-                    {/* RECENT COMPLETIONS */}
-                    {data.recentLessons?.length > 0 && (
-                        <div className="p-10 print:p-8 border-b border-slate-100">
-                            <h2 className="text-2xl font-extrabold text-slate-800 mb-6">Recent Lesson Completions</h2>
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b-2 border-slate-200">
-                                        <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider">Lesson</th>
-                                        <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider">Category</th>
-                                        <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider text-center">Score</th>
-                                        <th className="pb-3 text-sm font-extrabold text-slate-400 uppercase tracking-wider text-right">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.recentLessons.map((lesson, idx) => (
-                                        <tr key={idx} className="border-b border-slate-100">
-                                            <td className="py-3 font-bold text-slate-700">{lesson.lessonTitle}</td>
-                                            <td className="py-3 text-sm font-bold text-slate-500">{CATEGORY_LABELS[lesson.lessonCategory] || lesson.lessonCategory}</td>
-                                            <td className="py-3 text-center">
-                                                <span className={`px-3 py-1 rounded-lg font-extrabold text-sm ${lesson.successRate >= 70 ? 'bg-emerald-100 text-emerald-700' : lesson.successRate >= 40 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
-                                                    {lesson.successRate?.toFixed(0)}%
-                                                </span>
-                                            </td>
-                                            <td className="py-3 text-right text-sm text-slate-400 font-medium">{new Date(lesson.completedAt).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-
-                    {/* FOOTER */}
-                    <div className="p-10 print:p-8 bg-slate-50 text-center">
-                        <p className="text-sm text-slate-400 font-medium">
-                            This report was auto-generated by <strong>LearnAble™</strong> on {reportDate}.
-                            <br />Data reflects all recorded learning activities within the tracking period.
-                        </p>
-                    </div>
+            {/* Student Card */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6 flex items-center gap-5">
+                <div className="h-14 w-14 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-extrabold text-2xl shadow-md">
+                    {child?.name?.charAt(0) || '?'}
+                </div>
+                <div>
+                    <h2 className="text-xl font-extrabold text-slate-800">{child?.name}</h2>
+                    <p className="text-sm font-medium text-slate-400">{child?.age} years old — Level {child?.difficultyLevel} — Pace: {child?.learningPace || 'Standard'}</p>
                 </div>
             </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                    <Activity className="w-5 h-5 text-blue-500 mb-2" />
+                    <p className="text-2xl font-extrabold text-slate-800">{stats?.totalActivitiesCompleted || 0}</p>
+                    <p className="text-xs font-bold text-slate-400">Completed</p>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                    <Target className="w-5 h-5 text-emerald-500 mb-2" />
+                    <p className="text-2xl font-extrabold text-slate-800">{Math.round(stats?.averageSuccessRate || 0)}%</p>
+                    <p className="text-xs font-bold text-slate-400">Avg Success</p>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                    <Clock className="w-5 h-5 text-purple-500 mb-2" />
+                    <p className="text-2xl font-extrabold text-slate-800">{Math.round((stats?.totalTimeSpentSeconds || 0) / 60)} min</p>
+                    <p className="text-xs font-bold text-slate-400">Learning Time</p>
+                </div>
+                <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                    <User className="w-5 h-5 text-amber-500 mb-2" />
+                    <p className="text-2xl font-extrabold text-slate-800">{stats?.totalActivitiesAttempted || 0}</p>
+                    <p className="text-xs font-bold text-slate-400">Attempted</p>
+                </div>
+            </div>
+
+            {/* Category Breakdown */}
+            {categories.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-6">
+                    <h3 className="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-indigo-500" /> Success by Category
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {categories.map((c, i) => {
+                            const colors = ['bg-indigo-50 text-indigo-700', 'bg-emerald-50 text-emerald-700', 'bg-amber-50 text-amber-700', 'bg-pink-50 text-pink-700', 'bg-purple-50 text-purple-700', 'bg-cyan-50 text-cyan-700'];
+                            return (
+                                <div key={i} className={`rounded-xl p-4 ${colors[i % colors.length]}`}>
+                                    <p className="text-sm font-extrabold uppercase tracking-wider mb-1">{c.category}</p>
+                                    <p className="text-2xl font-extrabold">{Math.round(c.avgSuccess)}%</p>
+                                    <p className="text-xs font-bold opacity-60">{c.count} activities</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Recent Activity Table */}
+            {history.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                    <h3 className="text-lg font-extrabold text-slate-800 mb-4">Recent Activity Log</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-slate-200">
+                                    <th className="text-left py-3 px-2 font-bold text-slate-500">Date</th>
+                                    <th className="text-left py-3 px-2 font-bold text-slate-500">Activity</th>
+                                    <th className="text-center py-3 px-2 font-bold text-slate-500">Done</th>
+                                    <th className="text-center py-3 px-2 font-bold text-slate-500">Score</th>
+                                    <th className="text-center py-3 px-2 font-bold text-slate-500">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.slice(0, 15).map((item, i) => (
+                                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                                        <td className="py-3 px-2 font-medium text-slate-600">{new Date(item.timestamp).toLocaleDateString()}</td>
+                                        <td className="py-3 px-2 font-bold text-slate-800">{item.activity?.title || 'Unknown'}</td>
+                                        <td className="py-3 px-2 text-center">
+                                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${item.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {item.completed ? 'Yes' : 'No'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-2 text-center font-extrabold text-slate-700">{Math.round(item.successRate)}%</td>
+                                        <td className="py-3 px-2 text-center font-medium text-slate-500">{Math.round(item.timeSpent / 60)}m</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -53,7 +53,78 @@ const getChildStats = async (req, res) => {
     }
 };
 
+// @desc    Get classroom-wide analytics for all children belonging to the logged-in user
+// @route   GET /api/progress/classroom
+// @access  Private (Parent/Educator/Admin)
+const getClassroomAnalytics = async (req, res) => {
+    try {
+        const childRepo = AppDataSource.getRepository('Child');
+        const progressRepo = AppDataSource.getRepository('Progress');
+
+        const children = await childRepo.find({
+            where: { parentId: req.user.id },
+        });
+
+        const results = [];
+        for (const child of children) {
+            const stats = await progressRepo
+                .createQueryBuilder('p')
+                .select('COUNT(p.id)', 'totalAttempted')
+                .addSelect('SUM(CASE WHEN p.completed = true THEN 1 ELSE 0 END)', 'totalCompleted')
+                .addSelect('AVG(p.successRate)', 'avgSuccess')
+                .addSelect('SUM(p.timeSpent)', 'totalTime')
+                .where('p.childId = :childId', { childId: child.id })
+                .getRawOne();
+
+            results.push({
+                childId: child.id,
+                childName: child.name,
+                childAge: child.age,
+                totalAttempted: parseInt(stats.totalAttempted) || 0,
+                totalCompleted: parseInt(stats.totalCompleted) || 0,
+                avgSuccess: parseFloat(stats.avgSuccess) || 0,
+                totalTimeSeconds: parseInt(stats.totalTime) || 0,
+            });
+        }
+
+        res.json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get success rate broken down by lesson category for a child
+// @route   GET /api/progress/categories/:childId
+// @access  Private
+const getCategoryBreakdown = async (req, res) => {
+    try {
+        const progressRepo = AppDataSource.getRepository('Progress');
+        const rows = await progressRepo
+            .createQueryBuilder('p')
+            .innerJoin('p.activity', 'a')
+            .innerJoin('a.lesson', 'l')
+            .select('l.category', 'category')
+            .addSelect('COUNT(p.id)', 'count')
+            .addSelect('AVG(p.successRate)', 'avgSuccess')
+            .where('p.childId = :childId', { childId: req.params.childId })
+            .groupBy('l.category')
+            .getRawMany();
+
+        res.json(rows.map(r => ({
+            category: r.category,
+            count: parseInt(r.count) || 0,
+            avgSuccess: parseFloat(r.avgSuccess) || 0,
+        })));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     getChildProgress,
     getChildStats,
+    getClassroomAnalytics,
+    getCategoryBreakdown,
 };

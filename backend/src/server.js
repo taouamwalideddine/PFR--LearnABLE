@@ -29,7 +29,6 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/routines', routineRoutes);
 app.use('/api/rewards', require('./routes/rewardRoutes'));
-app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
 const AppDataSource = require('./config/data-source');
 
