@@ -1,9 +1,7 @@
 const AppDataSource = require('../config/data-source');
 const crypto = require('crypto');
 
-// @desc    Generate an access code for a child (Parent only)
 // @route   POST /api/access-codes/generate
-// @access  Private (PARENT)
 const generateCode = async (req, res) => {
     try {
         const { childId } = req.body;
@@ -36,9 +34,8 @@ const generateCode = async (req, res) => {
     }
 };
 
-// @desc    Redeem an access code (Educator only)
+// @desc    code redeeming for educators to link to a student
 // @route   POST /api/access-codes/redeem
-// @access  Private (EDUCATEUR)
 const redeemCode = async (req, res) => {
     try {
         const { code } = req.body;
@@ -52,13 +49,13 @@ const redeemCode = async (req, res) => {
             return res.status(400).json({ message: 'Code has expired' });
         }
 
-        // Check if already linked
+        // check if existing
         const existing = await linkRepo.findOne({
             where: { educatorId: req.user.id, childId: accessCode.childId },
         });
         if (existing) return res.status(400).json({ message: 'You already have access to this student' });
 
-        // Create the educator-child link
+        // create the educator-child link
         const link = linkRepo.create({
             educatorId: req.user.id,
             childId: accessCode.childId,
@@ -80,9 +77,8 @@ const redeemCode = async (req, res) => {
     }
 };
 
-// @desc    Get all educators linked to a child (Parent view)
+// @desc show linked educators 
 // @route   GET /api/access-codes/links/:childId
-// @access  Private (PARENT)
 const getChildLinks = async (req, res) => {
     try {
         const linkRepo = AppDataSource.getRepository('EducatorChild');
@@ -102,9 +98,8 @@ const getChildLinks = async (req, res) => {
     }
 };
 
-// @desc    Revoke an educator's access to a child (Parent only)
+// @desc    remove access
 // @route   DELETE /api/access-codes/links/:linkId
-// @access  Private (PARENT)
 const revokeAccess = async (req, res) => {
     try {
         const linkRepo = AppDataSource.getRepository('EducatorChild');

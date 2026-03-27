@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { MessageSquare, Heart, Plus, Search, Trash2, X, Send, ChevronRight, Filter } from 'lucide-react';
+import { MessageSquare, Plus, Search, Trash2, X, Send, ChevronRight } from 'lucide-react';
 
 const CATEGORIES = ['General', 'Tips & Strategies', 'Resources', 'Victories', 'Support'];
 const CATEGORY_COLORS = {
@@ -50,13 +50,7 @@ const CommunityForum = () => {
         } catch (e) { console.error(e); }
     };
 
-    const handleLike = async (postId) => {
-        try {
-            await api.patch(`/forum/posts/${postId}/like`);
-            setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
-            if (selectedPost?.id === postId) setSelectedPost(prev => ({ ...prev, likes: prev.likes + 1 }));
-        } catch (e) { console.error(e); }
-    };
+
 
     const handleDeletePost = async (postId) => {
         if (!window.confirm('Delete this post?')) return;
@@ -218,11 +212,7 @@ const CommunityForum = () => {
                                 <button onClick={() => setSelectedPost(null)} className="p-2 hover:bg-slate-100 rounded-xl transition"><X className="w-5 h-5" /></button>
                             </div>
                             <p className="text-slate-600 mt-4 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
-                            <div className="flex items-center gap-4 mt-5">
-                                <button onClick={() => handleLike(selectedPost.id)} className="flex items-center gap-1.5 text-sm font-bold text-rose-500 hover:text-rose-700 transition">
-                                    <Heart className="w-4 h-4" /> {selectedPost.likes}
-                                </button>
-                            </div>
+
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{selectedPost.comments?.length || 0} Comments</p>
@@ -291,8 +281,7 @@ const CommunityForum = () => {
                             <p className="text-slate-500 text-sm line-clamp-2 mb-4">{post.content}</p>
                             <div className="flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-4">
-                                    <span className="flex items-center gap-1 text-rose-500 font-bold"><Heart className="w-4 h-4" /> {post.likes}</span>
-                                    <span className="flex items-center gap-1 text-slate-400 font-bold"><MessageSquare className="w-4 h-4" /> {post.commentCount}</span>
+                                    <span className="flex items-center gap-1 text-slate-400 font-bold"><MessageSquare className="w-4 h-4" /> {post.commentCount} comments</span>
                                 </div>
                                 <span className="text-slate-400 text-xs font-medium">{post.authorEmail} · {timeAgo(post.createdAt)}</span>
                             </div>

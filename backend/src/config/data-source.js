@@ -4,7 +4,7 @@ require('dotenv').config();
 const AppDataSource = new DataSource({
     type: 'postgres',
     url: process.env.DATABASE_URL,
-    synchronize: true, // Use carefully in production. Good for dev/prototyping.
+    synchronize: true,
     logging: false,
     entities: [
         require('../entities/User'),

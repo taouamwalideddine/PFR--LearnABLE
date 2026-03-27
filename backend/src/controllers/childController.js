@@ -269,7 +269,13 @@ const deleteChild = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // Clear FK references before deletion
+        // Clear ALL FK references before deletion
+        const progressRepo = AppDataSource.getRepository('Progress');
+        await progressRepo.delete({ childId: req.params.id });
+
+        const rewardRepo = AppDataSource.getRepository('Reward');
+        await rewardRepo.delete({ childId: req.params.id });
+
         const codeRepo = AppDataSource.getRepository('AccessCode');
         await codeRepo.delete({ childId: req.params.id });
 
@@ -279,7 +285,19 @@ const deleteChild = async (req, res) => {
         const msgRepo = AppDataSource.getRepository('Message');
         await msgRepo.delete({ childId: req.params.id });
 
-        await repo.remove(child);
+        // Clear M2M junction tables by loading and emptying relations
+        const fullChild = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['lessons', 'courses', 'routines'],
+        });
+        if (fullChild) {
+            fullChild.lessons = [];
+            fullChild.courses = [];
+            fullChild.routines = [];
+            await repo.save(fullChild);
+        }
+
+        await repo.remove(fullChild || child);
         res.json({ message: 'Child profile deleted successfully' });
     } catch (error) {
         console.error(error);
