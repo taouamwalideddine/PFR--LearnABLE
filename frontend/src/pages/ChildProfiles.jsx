@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { UserPlus, Activity, PlayCircle, BookOpen, Trash2 } from 'lucide-react';
+import { UserPlus, Activity, PlayCircle, BookOpen, Trash2, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ManageLessonsModal from '../components/ManageLessonsModal';
 
@@ -202,6 +202,13 @@ const ChildProfiles = () => {
                                         Progress
                                     </Link>
                                 </div>
+                                <Link
+                                    to={`/messages/${child.id}`}
+                                    className="w-full flex justify-center items-center py-3 bg-white text-emerald-600 font-bold border-2 border-emerald-100 rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition-colors mt-3"
+                                >
+                                    <MessageCircle className="w-5 h-5 mr-2" />
+                                    Messages
+                                </Link>
                                 <button
                                     onClick={() => handleDeleteChild(child.id)}
                                     className="w-full flex justify-center items-center py-3 text-rose-500 font-bold border-2 border-rose-100 rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-colors mt-3"

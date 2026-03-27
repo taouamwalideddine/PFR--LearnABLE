@@ -11,7 +11,8 @@ import {
     Menu,
     X,
     Calendar,
-    BarChart3
+    BarChart3,
+    Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -44,6 +45,7 @@ const Sidebar = () => {
         { name: 'Curriculum', href: '/curriculum', icon: GraduationCap, hidden: user?.role === 'ENFANT' },
         { name: 'Routines', href: '/routines', icon: Calendar, hidden: user?.role === 'ENFANT' },
         { name: 'Classroom Insights', href: '/classroom', icon: BarChart3, hidden: user?.role === 'ENFANT' },
+        { name: 'Access & Linking', href: '/access', icon: Shield, hidden: user?.role === 'ENFANT' },
         { name: 'Emotions Demo', href: '/emotions', icon: Smile },
         // { name: 'Community Forum', href: '/forum', icon: MessageSquare }, // Coming soon
     ];

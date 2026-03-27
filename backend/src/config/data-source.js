@@ -19,6 +19,9 @@ const AppDataSource = new DataSource({
         require('../entities/Comment'),
         require('../entities/Routine'),
         require('../entities/RoutineStep'),
+        require('../entities/AccessCode'),
+        require('../entities/EducatorChild'),
+        require('../entities/Message'),
     ],
 });
 
