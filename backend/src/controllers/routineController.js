@@ -5,13 +5,15 @@ const AppDataSource = require('../config/data-source');
 // @access  Private
 const getChildRoutines = async (req, res) => {
     try {
-        const repo = AppDataSource.getRepository('Routine');
-        const routines = await repo.find({
-            where: { childId: req.params.childId },
-            relations: ['steps'],
-            order: { createdAt: 'ASC' },
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOne({
+            where: { id: req.params.childId },
+            relations: ['routines', 'routines.steps'],
         });
 
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+
+        const routines = child.routines || [];
         // Sort steps inside each routine by orderIndex
         routines.forEach(r => {
             if (r.steps) {
@@ -26,18 +28,35 @@ const getChildRoutines = async (req, res) => {
     }
 };
 
+// @desc    Get all routines managed by adult
+// @route   GET /api/routines
+// @access  Private
+const getRoutines = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Routine');
+        const routines = await repo.find({
+            where: { creatorId: req.user.id },
+            relations: ['children'],
+            order: { createdAt: 'DESC' },
+        });
+        res.json(routines);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // @desc    Create a new routine
 // @route   POST /api/routines
 // @access  Private
 const createRoutine = async (req, res) => {
-    const { title, description, category, childId, isActive } = req.body;
+    const { title, description, category, isActive } = req.body;
     try {
         const repo = AppDataSource.getRepository('Routine');
         const newRoutine = repo.create({
             title,
             description,
             category: category || 'DAILY',
-            childId,
             creatorId: req.user.id,
             isActive: isActive || false,
         });
@@ -128,10 +147,42 @@ const deleteRoutineStep = async (req, res) => {
     }
 };
 
+// @desc    Assign routine to child
+// @route   POST /api/routines/:id/assign
+// @access  Private
+const assignRoutine = async (req, res) => {
+    const { childId } = req.body;
+    try {
+        const childRepo = AppDataSource.getRepository('Child');
+        const child = await childRepo.findOne({
+            where: { id: childId },
+            relations: ['routines']
+        });
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+
+        const routineRepo = AppDataSource.getRepository('Routine');
+        const routine = await routineRepo.findOneBy({ id: req.params.id });
+        if (!routine) return res.status(404).json({ message: 'Routine not found' });
+
+        if (!child.routines) child.routines = [];
+        if (!child.routines.find(r => r.id === routine.id)) {
+            child.routines.push(routine);
+            await childRepo.save(child);
+        }
+
+        res.json({ message: 'Routine assigned successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
+    getRoutines,
     getChildRoutines,
     getRoutineById,
     createRoutine,
+    assignRoutine,
     addRoutineStep,
     deleteRoutine,
     deleteRoutineStep,
