@@ -4,6 +4,7 @@ const {
     getChildren,
     getChildById,
     updateChild,
+    deleteChild,
     getChildLessons,
     getChildCourses,
     assignLesson,
@@ -23,7 +24,8 @@ router
 router
     .route('/:id')
     .get(getChildById)
-    .put(updateChild);
+    .put(updateChild)
+    .delete(authorize('PARENT', 'ADMIN'), deleteChild);
 
 // Lesson assignment routes
 router

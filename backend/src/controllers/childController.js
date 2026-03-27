@@ -4,14 +4,13 @@ const AppDataSource = require('../config/data-source');
 // @route   POST /api/children
 // @access  Private (Parent/Educator/Admin)
 const createChild = async (req, res) => {
-    const { name, age, sensoryPreferences, learningPace, difficultyLevel } = req.body;
+    const { name, age, learningPace, difficultyLevel } = req.body;
 
     try {
         const repo = AppDataSource.getRepository('Child');
         const newChild = repo.create({
             name,
             age: parseInt(age),
-            sensoryPreferences,
             learningPace,
             difficultyLevel: parseInt(difficultyLevel) || 1,
             parentId: req.user.id,
@@ -216,11 +215,33 @@ const removeLesson = async (req, res) => {
     }
 };
 
+// @desc    Delete a child profile
+// @route   DELETE /api/children/:id
+// @access  Private (Parent/Admin)
+const deleteChild = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Child');
+        const child = await repo.findOneBy({ id: req.params.id });
+
+        if (!child) return res.status(404).json({ message: 'Child not found' });
+        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await repo.remove(child);
+        res.json({ message: 'Child profile deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     createChild,
     getChildren,
     getChildById,
     updateChild,
+    deleteChild,
     getChildLessons,
     getChildCourses,
     assignLesson,

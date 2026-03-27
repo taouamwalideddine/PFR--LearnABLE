@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { UserPlus, Settings, Headphones, VolumeX, Eye, Activity, PlayCircle, BookOpen } from 'lucide-react';
+import { UserPlus, Activity, PlayCircle, BookOpen, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ManageLessonsModal from '../components/ManageLessonsModal';
 
@@ -16,8 +16,6 @@ const ChildProfiles = () => {
         age: '',
         learningPace: 'NORMAL',
         difficultyLevel: 1,
-        lowStimulation: false,
-        soundEnabled: true,
     });
     const [loading, setLoading] = useState(true);
 
@@ -44,10 +42,6 @@ const ChildProfiles = () => {
                 age: formData.age,
                 learningPace: formData.learningPace,
                 difficultyLevel: formData.difficultyLevel,
-                sensoryPreferences: {
-                    lowStimulation: formData.lowStimulation,
-                    soundEnabled: formData.soundEnabled,
-                },
             };
             await api.post('/children', payload);
             setShowAddForm(false);
@@ -57,8 +51,6 @@ const ChildProfiles = () => {
                 age: '',
                 learningPace: 'NORMAL',
                 difficultyLevel: 1,
-                lowStimulation: false,
-                soundEnabled: true,
             });
         } catch (error) {
             console.error('Error creating child:', error);
@@ -68,6 +60,16 @@ const ChildProfiles = () => {
     const handlePlayAsChild = (child) => {
         switchChild(child);
         navigate('/dashboard');
+    };
+
+    const handleDeleteChild = async (childId) => {
+        if (!window.confirm("Are you sure you want to permanently delete this child profile? This cannot be undone.")) return;
+        try {
+            await api.delete(`/children/${childId}`);
+            fetchChildren();
+        } catch (err) {
+            console.error('Error deleting child:', err);
+        }
     };
 
     if (loading) return <div className="p-8 text-center">Loading profiles...</div>;
@@ -138,43 +140,6 @@ const ChildProfiles = () => {
                             <div className="text-sm font-bold text-indigo-600 mt-2 text-right">Level {formData.difficultyLevel}</div>
                         </div>
 
-                        <div className="md:col-span-2 border-t border-slate-100 pt-8 mt-4">
-                            <h3 className="text-sm font-extrabold text-slate-400 mb-6 uppercase tracking-wider flex items-center">
-                                <Settings className="w-4 h-4 mr-2 text-indigo-400" />
-                                Sensory Preferences
-                            </h3>
-                            <div className="flex flex-wrap gap-8">
-                                <label className="flex items-center space-x-4 cursor-pointer group bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                                    <div className={`p-3 rounded-xl transition ${formData.lowStimulation ? 'bg-indigo-100 text-indigo-600 shadow-inner' : 'bg-white text-slate-400 shadow-sm'}`}>
-                                        <Eye className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <span className="text-sm font-bold text-slate-700 block mb-1">Low Stimulation Mode</span>
-                                        <input
-                                            type="checkbox"
-                                            className="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-all"
-                                            checked={formData.lowStimulation}
-                                            onChange={(e) => setFormData({ ...formData, lowStimulation: e.target.checked })}
-                                        />
-                                    </div>
-                                </label>
-
-                                <label className="flex items-center space-x-4 cursor-pointer group bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                                    <div className={`p-3 rounded-xl transition ${formData.soundEnabled ? 'bg-emerald-100 text-emerald-600 shadow-inner' : 'bg-red-50 text-red-500 shadow-sm'}`}>
-                                        {formData.soundEnabled ? <Headphones className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
-                                    </div>
-                                    <div>
-                                        <span className="text-sm font-bold text-slate-700 block mb-1">Sound Enabled</span>
-                                        <input
-                                            type="checkbox"
-                                            className="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-all"
-                                            checked={formData.soundEnabled}
-                                            onChange={(e) => setFormData({ ...formData, soundEnabled: e.target.checked })}
-                                        />
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
 
                         <div className="md:col-span-2 pt-6">
                             <button
@@ -204,16 +169,6 @@ const ChildProfiles = () => {
                                         {child.name.charAt(0)}
                                     </div>
                                     <div className="flex space-x-2">
-                                        {child.sensoryPreferences?.lowStimulation && (
-                                            <span title="Low Stimulation Active" className="p-2 bg-yellow-100/80 text-yellow-700 rounded-xl backdrop-blur-sm">
-                                                <Eye className="w-5 h-5" />
-                                            </span>
-                                        )}
-                                        {!child.sensoryPreferences?.soundEnabled && (
-                                            <span title="Sound Muted" className="p-2 bg-red-100/80 text-red-600 rounded-xl backdrop-blur-sm">
-                                                <VolumeX className="w-5 h-5" />
-                                            </span>
-                                        )}
                                     </div>
                                 </div>
                                 <h3 className="text-2xl font-extrabold text-slate-800 mb-2">{child.name}</h3>
@@ -247,6 +202,13 @@ const ChildProfiles = () => {
                                         Progress
                                     </Link>
                                 </div>
+                                <button
+                                    onClick={() => handleDeleteChild(child.id)}
+                                    className="w-full flex justify-center items-center py-3 text-rose-500 font-bold border-2 border-rose-100 rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-colors mt-3"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Profile
+                                </button>
                             </div>
                         </div>
                     ))

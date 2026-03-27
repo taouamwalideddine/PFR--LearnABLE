@@ -15,10 +15,6 @@ module.exports = new EntitySchema({
         age: {
             type: 'int',
         },
-        sensoryPreferences: {
-            type: 'jsonb',
-            nullable: true,
-        },
         learningPace: {
             type: 'varchar',
             nullable: true,
