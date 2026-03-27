@@ -33,6 +33,7 @@ app.use('/api/routines', routineRoutes);
 app.use('/api/rewards', require('./routes/rewardRoutes'));
 app.use('/api/access-codes', accessCodeRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/forum', require('./routes/forumRoutes'));
 
 const AppDataSource = require('./config/data-source');
 

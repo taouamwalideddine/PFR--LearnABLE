@@ -22,6 +22,7 @@ import IEPReport from './pages/IEPReport';
 import AccessCodes from './pages/AccessCodes';
 import MessagingPage from './pages/MessagingPage';
 import MyStudents from './pages/MyStudents';
+import CommunityForum from './pages/CommunityForum';
 import Sidebar from './components/Sidebar';
 
 // A component to intelligently route between dashboards based on activeChild
@@ -173,6 +174,14 @@ function AppContent() {
                             element={
                                 <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
                                     <MessagingPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/forum"
+                            element={
+                                <ProtectedRoute roles={['PARENT', 'EDUCATEUR', 'ADMIN']}>
+                                    <CommunityForum />
                                 </ProtectedRoute>
                             }
                         />

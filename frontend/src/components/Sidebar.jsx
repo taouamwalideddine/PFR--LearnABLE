@@ -47,7 +47,7 @@ const Sidebar = () => {
         { name: 'Routines', href: '/routines', icon: Calendar, hidden: user?.role === 'ENFANT' },
         { name: 'Classroom Insights', href: '/classroom', icon: BarChart3, hidden: user?.role === 'ENFANT' },
         { name: 'Access & Linking', href: '/access', icon: Shield, hidden: user?.role === 'ENFANT' },
-        { name: 'Emotions Demo', href: '/emotions', icon: Smile },
+        { name: 'Community', href: '/forum', icon: MessageSquare, hidden: user?.role === 'ENFANT' },
     ];
 
     const isActive = (path) => location.pathname.startsWith(path);
