@@ -1,8 +1,32 @@
 const AppDataSource = require('../config/data-source');
 
+// Helper: check if the user is authorized to access a child
+// Returns true for: the parent (owner), a linked educator, or an admin
+const isAuthorizedForChild = async (userId, userRole, childId) => {
+    if (userRole === 'ADMIN') return true;
+
+    const childRepo = AppDataSource.getRepository('Child');
+    const child = await childRepo.findOneBy({ id: childId });
+    if (!child) return false;
+
+    // Parent owns this child
+    if (child.parentId === userId) return true;
+
+    // Educator is linked via access code
+    if (userRole === 'EDUCATEUR') {
+        const linkRepo = AppDataSource.getRepository('EducatorChild');
+        const link = await linkRepo.findOne({
+            where: { educatorId: userId, childId },
+        });
+        return !!link;
+    }
+
+    return false;
+};
+
 // @desc    Create a new child profile
 // @route   POST /api/children
-// @access  Private (Parent/Educator/Admin)
+// @access  Private (Parent/Admin)
 const createChild = async (req, res) => {
     const { name, age, learningPace, difficultyLevel } = req.body;
 
@@ -29,6 +53,16 @@ const createChild = async (req, res) => {
 // @access  Private
 const getChildren = async (req, res) => {
     try {
+        if (req.user.role === 'EDUCATEUR') {
+            // Educators see students linked via access codes
+            const linkRepo = AppDataSource.getRepository('EducatorChild');
+            const links = await linkRepo.find({
+                where: { educatorId: req.user.id },
+                relations: ['child'],
+            });
+            return res.json(links.map(l => l.child).filter(Boolean));
+        }
+
         const repo = AppDataSource.getRepository('Child');
         const children = await repo.find({
             where: { parentId: req.user.id },
@@ -52,7 +86,8 @@ const getChildById = async (req, res) => {
             return res.status(404).json({ message: 'Child not found' });
         }
 
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+        const authorized = await isAuthorizedForChild(req.user.id, req.user.role, req.params.id);
+        if (!authorized) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -65,7 +100,7 @@ const getChildById = async (req, res) => {
 
 // @desc    Update child profile
 // @route   PUT /api/children/:id
-// @access  Private
+// @access  Private (Parent/Admin only — educators can view but not edit)
 const updateChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -97,14 +132,15 @@ const getChildLessons = async (req, res) => {
         const repo = AppDataSource.getRepository('Child');
         const child = await repo.findOne({
             where: { id: req.params.id },
-            relations: ['lessons'], // Fetch the many-to-many relation data
+            relations: ['lessons'],
         });
 
         if (!child) {
             return res.status(404).json({ message: 'Child not found' });
         }
 
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+        const authorized = await isAuthorizedForChild(req.user.id, req.user.role, req.params.id);
+        if (!authorized) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -127,7 +163,9 @@ const getChildCourses = async (req, res) => {
         });
 
         if (!child) return res.status(404).json({ message: 'Child not found' });
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+
+        const authorized = await isAuthorizedForChild(req.user.id, req.user.role, req.params.id);
+        if (!authorized) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -164,14 +202,15 @@ const assignLesson = async (req, res) => {
         });
 
         if (!child) return res.status(404).json({ message: 'Child not found' });
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+
+        const authorized = await isAuthorizedForChild(req.user.id, req.user.role, req.params.id);
+        if (!authorized) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
         const lesson = await lessonRepo.findOneBy({ id: lessonId });
         if (!lesson) return res.status(404).json({ message: 'Lesson not found' });
 
-        // Check if already assigned
         const isAssigned = child.lessons.some(l => l.id === lessonId);
         if (isAssigned) {
             return res.status(400).json({ message: 'Lesson is already assigned to this child' });
@@ -201,7 +240,9 @@ const removeLesson = async (req, res) => {
         });
 
         if (!child) return res.status(404).json({ message: 'Child not found' });
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+
+        const authorized = await isAuthorizedForChild(req.user.id, req.user.role, id);
+        if (!authorized) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -227,6 +268,16 @@ const deleteChild = async (req, res) => {
         if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(403).json({ message: 'Not authorized' });
         }
+
+        // Clear FK references before deletion
+        const codeRepo = AppDataSource.getRepository('AccessCode');
+        await codeRepo.delete({ childId: req.params.id });
+
+        const linkRepo = AppDataSource.getRepository('EducatorChild');
+        await linkRepo.delete({ childId: req.params.id });
+
+        const msgRepo = AppDataSource.getRepository('Message');
+        await msgRepo.delete({ childId: req.params.id });
 
         await repo.remove(child);
         res.json({ message: 'Child profile deleted successfully' });
