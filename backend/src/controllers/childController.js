@@ -262,42 +262,30 @@ const removeLesson = async (req, res) => {
 const deleteChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
-        const child = await repo.findOneBy({ id: req.params.id });
+        const child = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['lessons', 'courses', 'routines'],
+        });
 
         if (!child) return res.status(404).json({ message: 'Child not found' });
         if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // Clear ALL FK references before deletion
-        const progressRepo = AppDataSource.getRepository('Progress');
-        await progressRepo.delete({ childId: req.params.id });
+        // Clear many-to-many junction tables
+        child.lessons = [];
+        child.courses = [];
+        if (child.routines) child.routines = [];
+        await repo.save(child);
 
-        const rewardRepo = AppDataSource.getRepository('Reward');
-        await rewardRepo.delete({ childId: req.params.id });
+        // Clear FK references in other tables
+        await AppDataSource.getRepository('Progress').delete({ childId: req.params.id });
+        await AppDataSource.getRepository('Reward').delete({ childId: req.params.id });
+        await AppDataSource.getRepository('AccessCode').delete({ childId: req.params.id });
+        await AppDataSource.getRepository('EducatorChild').delete({ childId: req.params.id });
+        await AppDataSource.getRepository('Message').delete({ childId: req.params.id });
 
-        const codeRepo = AppDataSource.getRepository('AccessCode');
-        await codeRepo.delete({ childId: req.params.id });
-
-        const linkRepo = AppDataSource.getRepository('EducatorChild');
-        await linkRepo.delete({ childId: req.params.id });
-
-        const msgRepo = AppDataSource.getRepository('Message');
-        await msgRepo.delete({ childId: req.params.id });
-
-        // Clear M2M junction tables by loading and emptying relations
-        const fullChild = await repo.findOne({
-            where: { id: req.params.id },
-            relations: ['lessons', 'courses', 'routines'],
-        });
-        if (fullChild) {
-            fullChild.lessons = [];
-            fullChild.courses = [];
-            fullChild.routines = [];
-            await repo.save(fullChild);
-        }
-
-        await repo.remove(fullChild || child);
+        await repo.remove(child);
         res.json({ message: 'Child profile deleted successfully' });
     } catch (error) {
         console.error(error);

@@ -29,7 +29,6 @@ const getPosts = async (req, res) => {
             title: p.title,
             content: p.content,
             category: p.category,
-            likes: p.likes,
             isReported: p.isReported,
             authorEmail: p.author?.email,
             authorId: p.authorId,
@@ -53,7 +52,6 @@ const getPostById = async (req, res) => {
         });
         if (!post) return res.status(404).json({ message: 'Post not found' });
 
-        // Sort comments newest first
         if (post.comments) post.comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         res.json({
@@ -62,25 +60,11 @@ const getPostById = async (req, res) => {
             comments: post.comments?.map(c => ({
                 id: c.id,
                 content: c.content,
-                likes: c.likes,
                 authorEmail: c.author?.email,
                 authorId: c.authorId,
                 createdAt: c.createdAt,
             })) || [],
         });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-// @desc    Like a post
-// @route   PATCH /api/forum/posts/:id/like
-const likePost = async (req, res) => {
-    try {
-        const repo = AppDataSource.getRepository('Post');
-        await repo.increment({ id: req.params.id }, 'likes', 1);
-        res.json({ message: 'Liked' });
     } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Server error' });
@@ -140,4 +124,4 @@ const deleteComment = async (req, res) => {
     }
 };
 
-module.exports = { createPost, getPosts, getPostById, likePost, deletePost, addComment, deleteComment };
+module.exports = { createPost, getPosts, getPostById, deletePost, addComment, deleteComment };
