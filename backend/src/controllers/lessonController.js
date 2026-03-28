@@ -111,10 +111,64 @@ const assignLesson = async (req, res) => {
     }
 };
 
+// @desc    Delete a lesson
+// @route   DELETE /api/lessons/:id
+// @access  Private (Educator/Admin)
+const deleteLesson = async (req, res) => {
+    try {
+        const repo = AppDataSource.getRepository('Lesson');
+        const activityRepo = AppDataSource.getRepository('Activity');
+        const progressRepo = AppDataSource.getRepository('Progress');
+        const routineStepRepo = AppDataSource.getRepository('RoutineStep');
+
+        const lesson = await repo.findOne({
+            where: { id: req.params.id },
+            relations: ['activities', 'children'],
+        });
+
+        if (!lesson) {
+            return res.status(404).json({ message: 'Lesson not found' });
+        }
+
+        const activityIds = lesson.activities?.map(a => a.id) || [];
+
+        // 1. Clear Lesson-Child Junction Table (child_lessons)
+        await AppDataSource.createQueryBuilder()
+            .relation('Lesson', 'children')
+            .of(lesson.id)
+            .remove(lesson.children);
+
+        // 2. Delete Progress records for activities in this lesson
+        if (activityIds.length > 0) {
+            await progressRepo.delete({ activityId: require('typeorm').In(activityIds) });
+        }
+
+        // 3. Nullify RoutineStep links
+        await routineStepRepo.update(
+            { linkedLessonId: lesson.id },
+            { linkedLessonId: null, type: 'CUSTOM' }
+        );
+
+        // 4. Delete Activities
+        if (activityIds.length > 0) {
+            await activityRepo.delete({ id: require('typeorm').In(activityIds) });
+        }
+
+        // 5. Finally, delete the lesson itself
+        await repo.delete(lesson.id);
+
+        res.json({ message: 'Lesson and all related data removed successfully' });
+    } catch (error) {
+        console.error('Error deleting lesson:', error);
+        res.status(500).json({ message: 'Server error: ' + error.message });
+    }
+};
+
 module.exports = {
     createLesson,
     getLessons,
     getLessonById,
     updateLesson,
     assignLesson,
+    deleteLesson,
 };

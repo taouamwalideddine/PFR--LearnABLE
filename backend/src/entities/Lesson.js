@@ -52,6 +52,7 @@ module.exports = new EntitySchema({
             type: 'one-to-many',
             target: 'Activity',
             inverseSide: 'lesson',
+            cascade: true,
         },
         children: {
             type: 'many-to-many',

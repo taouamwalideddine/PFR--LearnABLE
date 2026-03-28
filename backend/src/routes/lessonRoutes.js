@@ -5,6 +5,7 @@ const {
     getLessonById,
     updateLesson,
     assignLesson,
+    deleteLesson,
 } = require('../controllers/lessonController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,7 +21,8 @@ router
 router
     .route('/:id')
     .get(getLessonById)
-    .put(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateLesson);
+    .put(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateLesson)
+    .delete(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), deleteLesson);
 
 router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignLesson);
 

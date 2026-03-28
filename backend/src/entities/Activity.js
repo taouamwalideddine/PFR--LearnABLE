@@ -36,6 +36,7 @@ module.exports = new EntitySchema({
             target: 'Lesson',
             joinColumn: { name: 'lessonId' },
             inverseSide: 'activities',
+            onDelete: 'CASCADE',
         },
         progress: {
             type: 'one-to-many',

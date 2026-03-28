@@ -43,11 +43,11 @@ const InformationCard = ({ activity, onComplete }) => {
 
             <div className="flex-1 overflow-y-auto p-8 md:p-12 flex flex-col items-center justify-center text-center">
                 {currentPageData.imageUrl && (
-                    <div className="mb-8 relative w-full max-w-2xl h-64 md:h-96 rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-50 flex items-center justify-center group">
+                    <div className="mb-8 relative w-full max-w-3xl min-h-[300px] max-h-[500px] rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-50 flex items-center justify-center group">
                         <img 
                             src={currentPageData.imageUrl} 
                             alt={`Story Page ${currentPage + 1}`} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105"
                             onError={(e) => {
                                 e.target.onerror = null; 
                                 e.target.style.display = 'none';

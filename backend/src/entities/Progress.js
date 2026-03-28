@@ -38,12 +38,14 @@ module.exports = new EntitySchema({
             target: 'Child',
             joinColumn: { name: 'childId' },
             inverseSide: 'progress',
+            onDelete: 'CASCADE',
         },
         activity: {
             type: 'many-to-one',
             target: 'Activity',
             joinColumn: { name: 'activityId' },
             inverseSide: 'progress',
+            onDelete: 'CASCADE',
         },
     },
 });

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import ManageLessonsModal from '../components/ManageLessonsModal';
 
 const ChildProfiles = () => {
-    const { switchChild } = useAuth();
+    const { user, switchChild } = useAuth();
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -18,6 +18,8 @@ const ChildProfiles = () => {
         difficultyLevel: 1,
     });
     const [loading, setLoading] = useState(true);
+
+    const isEducator = user?.role === 'EDUCATEUR';
 
     useEffect(() => {
         fetchChildren();
@@ -72,25 +74,31 @@ const ChildProfiles = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-center">Loading profiles...</div>;
+    if (loading) return <div className="p-8 text-center pt-20 animate-pulse text-slate-400 font-bold">Loading profiles...</div>;
 
     return (
         <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-12 animate-fade-in">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 mb-2">My Children</h1>
-                    <p className="text-lg text-slate-500 font-medium">Manage profiles and learning preferences.</p>
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 mb-2">
+                        {isEducator ? 'My Students' : 'My Children'}
+                    </h1>
+                    <p className="text-lg text-slate-500 font-medium">
+                        {isEducator ? 'Manage your linked students and their curriculum.' : 'Manage profiles and learning preferences.'}
+                    </p>
                 </div>
-                <button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-1"
-                >
-                    <UserPlus className="w-5 h-5 mr-3" />
-                    Add Profile
-                </button>
+                {!isEducator && (
+                    <button
+                        onClick={() => setShowAddForm(!showAddForm)}
+                        className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-1"
+                    >
+                        <UserPlus className="w-5 h-5 mr-3" />
+                        Add Profile
+                    </button>
+                )}
             </div>
 
-            {showAddForm && (
+            {showAddForm && !isEducator && (
                 <div className="mb-12 bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 animate-fade-in relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-bl-[10rem] -mr-8 -mt-8 pointer-events-none"></div>
                     <h2 className="text-2xl font-bold mb-8 text-slate-800 relative z-10">New Child Profile</h2>
@@ -156,7 +164,7 @@ const ChildProfiles = () => {
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {children.length === 0 ? (
                     <div className="col-span-full py-16 text-center bg-white/50 backdrop-blur-sm rounded-[2rem] border-2 border-dashed border-slate-300">
-                        <p className="text-slate-500 text-lg font-medium">No children profiles found.<br/>Click 'Add Profile' to get started!</p>
+                        <p className="text-slate-500 text-lg font-medium">No students or children profiles found.</p>
                     </div>
                 ) : (
                     children.map((child) => (
@@ -209,13 +217,16 @@ const ChildProfiles = () => {
                                     <MessageCircle className="w-5 h-5 mr-2" />
                                     Messages
                                 </Link>
-                                <button
-                                    onClick={() => handleDeleteChild(child.id)}
-                                    className="w-full flex justify-center items-center py-3 text-rose-500 font-bold border-2 border-rose-100 rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-colors mt-3"
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Profile
-                                </button>
+                                
+                                {!isEducator && (
+                                    <button
+                                        onClick={() => handleDeleteChild(child.id)}
+                                        className="w-full flex justify-center items-center py-3 text-rose-500 font-bold border-2 border-rose-100 rounded-xl hover:bg-rose-50 hover:border-rose-200 transition-colors mt-3"
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete Profile
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))

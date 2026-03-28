@@ -1,3 +1,4 @@
+const { In } = require('typeorm');
 const AppDataSource = require('../config/data-source');
 
 const createCourse = async (req, res) => {
@@ -71,23 +72,88 @@ const updateCourse = async (req, res) => {
 };
 
 const deleteCourse = async (req, res) => {
+    const courseId = req.params.id;
+    console.log(`[NUCLEAR DELETE] Initiating for course: ${courseId}`);
+    
     try {
-        const repo = AppDataSource.getRepository('Course');
-        const course = await repo.findOne({
-            where: { id: req.params.id },
-            relations: ['children'],
-        });
-        if (!course) return res.status(404).json({ message: 'Course not found' });
-        
-        // Detach all children from the course before deleting
-        course.children = [];
-        await repo.save(course);
+        const moduleRepo = AppDataSource.getRepository('Module');
+        const lessonRepo = AppDataSource.getRepository('Lesson');
+        const activityRepo = AppDataSource.getRepository('Activity');
+        const progressRepo = AppDataSource.getRepository('Progress');
+        const routineStepRepo = AppDataSource.getRepository('RoutineStep');
+        const courseRepo = AppDataSource.getRepository('Course');
 
-        await repo.remove(course);
-        res.json({ message: 'Course removed' });
+        // Bypassing TypeORM's complex joins (tablePath bug) with manual ID fetching
+        
+        // 1. Get Module IDs
+        const modules = await moduleRepo.find({ where: { courseId: courseId } });
+        const moduleIds = modules.map(m => m.id);
+        
+        let lessonIds = [];
+        if (moduleIds.length > 0) {
+            const lessons = await lessonRepo.find({ where: { moduleId: In(moduleIds) } });
+            lessonIds = lessons.map(l => l.id);
+        }
+
+        let activityIds = [];
+        if (lessonIds.length > 0) {
+            const activities = await activityRepo.find({ where: { lessonId: In(lessonIds) } });
+            activityIds = activities.map(a => a.id);
+        }
+
+        console.log(`[NUCLEAR DELETE] IDs collected - Modules: ${moduleIds.length}, Lessons: ${lessonIds.length}, Activities: ${activityIds.length}`);
+
+        // 2. Clear Junction Tables with Raw SQL (Bypasses all TypeORM relation logic)
+        console.log('[NUCLEAR DELETE] Clearing child_courses junction...');
+        await AppDataSource.query(`DELETE FROM child_courses WHERE "courseId" = $1`, [courseId]);
+
+        if (lessonIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Clearing child_lessons junction...');
+            // Need to handle multiple IDs in Raw SQL
+            const lessonPlaceholder = lessonIds.map((_, i) => `$${i + 1}`).join(',');
+            await AppDataSource.query(`DELETE FROM child_lessons WHERE "lessonId" IN (${lessonPlaceholder})`, lessonIds);
+        }
+
+        // 3. Clear Dependent Progress Records
+        if (activityIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Deleting progress records...');
+            await progressRepo.delete({ activityId: In(activityIds) });
+        }
+
+        // 4. Nullify Routine Steps
+        if (lessonIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Unlinking routine steps...');
+            await routineStepRepo.update({ linkedLessonId: In(lessonIds) }, { linkedLessonId: null, type: 'CUSTOM' });
+        }
+
+        // 5. Delete Core Entities in order
+        if (activityIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Deleting activities...');
+            await activityRepo.delete({ id: In(activityIds) });
+        }
+
+        if (lessonIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Deleting lessons...');
+            await lessonRepo.delete({ id: In(lessonIds) });
+        }
+
+        if (moduleIds.length > 0) {
+            console.log('[NUCLEAR DELETE] Deleting modules...');
+            await moduleRepo.delete({ id: In(moduleIds) });
+        }
+
+        console.log('[NUCLEAR DELETE] Deleting course entity...');
+        await courseRepo.delete(courseId);
+
+        console.log('[NUCLEAR DELETE] COMPLETED SUCCESSFULLY.');
+        res.json({ message: 'Course and all related records removed successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[NUCLEAR DELETE] FAILED:', error);
+        res.status(500).json({ 
+            message: 'Server error during deletion', 
+            details: error.message,
+            stack: error.stack
+        });
     }
 };
 
