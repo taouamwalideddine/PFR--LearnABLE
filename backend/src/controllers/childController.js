@@ -3,7 +3,7 @@ const AppDataSource = require('../config/data-source');
 // Helper: check if the user is authorized to access a child
 // Returns true for: the parent (owner), a linked educator, or an admin
 const isAuthorizedForChild = async (userId, userRole, childId) => {
-    if (userRole === 'ADMIN') return true;
+    // ADMIN bypass removed
 
     const childRepo = AppDataSource.getRepository('Child');
     const child = await childRepo.findOneBy({ id: childId });
@@ -100,7 +100,7 @@ const getChildById = async (req, res) => {
 
 // @desc    Update child profile
 // @route   PUT /api/children/:id
-// @access  Private (Parent/Admin only — educators can view but not edit)
+// @access  Private (Parent only — educators can view but not edit)
 const updateChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -110,7 +110,7 @@ const updateChild = async (req, res) => {
             return res.status(404).json({ message: 'Child not found' });
         }
 
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+        if (child.parentId !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -258,7 +258,7 @@ const removeLesson = async (req, res) => {
 
 // @desc    Delete a child profile
 // @route   DELETE /api/children/:id
-// @access  Private (Parent/Admin)
+// @access  Private (Parent)
 const deleteChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -268,7 +268,7 @@ const deleteChild = async (req, res) => {
         });
 
         if (!child) return res.status(404).json({ message: 'Child not found' });
-        if (child.parentId !== req.user.id && req.user.role !== 'ADMIN') {
+        if (child.parentId !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 

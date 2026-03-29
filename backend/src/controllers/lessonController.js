@@ -123,7 +123,7 @@ const deleteLesson = async (req, res) => {
 
         const lesson = await repo.findOne({
             where: { id: req.params.id },
-            relations: ['activities', 'children'],
+            relations: ['activities'],
         });
 
         if (!lesson) {
@@ -132,11 +132,9 @@ const deleteLesson = async (req, res) => {
 
         const activityIds = lesson.activities?.map(a => a.id) || [];
 
-        // 1. Clear Lesson-Child Junction Table (child_lessons)
-        await AppDataSource.createQueryBuilder()
-            .relation('Lesson', 'children')
-            .of(lesson.id)
-            .remove(lesson.children);
+        // 1. Clear Lesson-Child Junction Table (child_lessons) using raw SQL
+        console.log(`[NUCLEAR DELETE] Clearing child_lessons junction for lesson: ${lesson.id}`);
+        await AppDataSource.query(`DELETE FROM child_lessons WHERE "lessonId" = $1`, [lesson.id]);
 
         // 2. Delete Progress records for activities in this lesson
         if (activityIds.length > 0) {

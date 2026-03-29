@@ -16,14 +16,14 @@ router.use(protect);
 router
     .route('/')
     .get(getLessons)
-    .post(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), createLesson);
+    .post(authorize('EDUCATEUR', 'PARENT'), createLesson);
 
 router
     .route('/:id')
     .get(getLessonById)
-    .put(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateLesson)
-    .delete(authorize('EDUCATEUR', 'ADMIN', 'PARENT'), deleteLesson);
+    .put(authorize('EDUCATEUR', 'PARENT'), updateLesson)
+    .delete(authorize('EDUCATEUR', 'PARENT'), deleteLesson);
 
-router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignLesson);
+router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR'), assignLesson);
 
 module.exports = router;

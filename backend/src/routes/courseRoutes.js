@@ -17,9 +17,9 @@ router.get('/', getCourses);
 router.get('/:id', getCourseById);
 
 // Educator/Admin/Parent routes
-router.post('/', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), createCourse);
-router.put('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), updateCourse);
-router.delete('/:id', authorize('EDUCATEUR', 'ADMIN', 'PARENT'), deleteCourse);
-router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignCourse);
+router.post('/', authorize('EDUCATEUR', 'PARENT'), createCourse);
+router.put('/:id', authorize('EDUCATEUR', 'PARENT'), updateCourse);
+router.delete('/:id', authorize('EDUCATEUR', 'PARENT'), deleteCourse);
+router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR'), assignCourse);
 
 module.exports = router;

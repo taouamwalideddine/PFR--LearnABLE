@@ -20,10 +20,10 @@ router.get('/child/:childId', getChildRoutines);
 router.get('/:id', getRoutineById);
 
 // Only authorized adults can build routines
-router.post('/', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), createRoutine);
-router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignRoutine);
-router.post('/:id/steps', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), addRoutineStep);
-router.delete('/:id', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), deleteRoutine);
-router.delete('/steps/:stepId', authorize('PARENT', 'EDUCATEUR', 'ADMIN'), deleteRoutineStep);
+router.post('/', authorize('PARENT', 'EDUCATEUR'), createRoutine);
+router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR'), assignRoutine);
+router.post('/:id/steps', authorize('PARENT', 'EDUCATEUR'), addRoutineStep);
+router.delete('/:id', authorize('PARENT', 'EDUCATEUR'), deleteRoutine);
+router.delete('/steps/:stepId', authorize('PARENT', 'EDUCATEUR'), deleteRoutineStep);
 
 module.exports = router;

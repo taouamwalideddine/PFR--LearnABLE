@@ -71,7 +71,7 @@ const getPostById = async (req, res) => {
     }
 };
 
-// @desc    Delete a post (author or admin)
+// @desc    Delete a post (author)
 // @route   DELETE /api/forum/posts/:id
 const deletePost = async (req, res) => {
     try {
@@ -79,7 +79,7 @@ const deletePost = async (req, res) => {
         const commentRepo = AppDataSource.getRepository('Comment');
         const post = await repo.findOneBy({ id: req.params.id });
         if (!post) return res.status(404).json({ message: 'Post not found' });
-        if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
+        if (post.authorId !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
         await commentRepo.delete({ postId: req.params.id });
@@ -106,14 +106,14 @@ const addComment = async (req, res) => {
     }
 };
 
-// @desc    Delete a comment (author or admin)
+// @desc    Delete a comment (author)
 // @route   DELETE /api/forum/comments/:id
 const deleteComment = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Comment');
         const comment = await repo.findOneBy({ id: req.params.id });
         if (!comment) return res.status(404).json({ message: 'Comment not found' });
-        if (comment.authorId !== req.user.id && req.user.role !== 'ADMIN') {
+        if (comment.authorId !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized' });
         }
         await repo.remove(comment);

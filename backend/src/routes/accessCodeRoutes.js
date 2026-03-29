@@ -12,10 +12,10 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post('/generate', authorize('PARENT', 'ADMIN'), generateCode);
-router.post('/redeem', authorize('EDUCATEUR', 'ADMIN'), redeemCode);
-router.get('/links/:childId', authorize('PARENT', 'ADMIN'), getChildLinks);
-router.delete('/links/:linkId', authorize('PARENT', 'ADMIN'), revokeAccess);
-router.get('/my-students', authorize('EDUCATEUR', 'ADMIN'), getMyStudents);
+router.post('/generate', authorize('PARENT'), generateCode);
+router.post('/redeem', authorize('EDUCATEUR'), redeemCode);
+router.get('/links/:childId', authorize('PARENT'), getChildLinks);
+router.delete('/links/:linkId', authorize('PARENT'), revokeAccess);
+router.get('/my-students', authorize('EDUCATEUR'), getMyStudents);
 
 module.exports = router;

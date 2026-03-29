@@ -18,7 +18,7 @@ module.exports = new EntitySchema({
         },
         role: {
             type: 'varchar',
-            default: 'PARENT', // ENFANT, PARENT, EDUCATEUR, ADMIN
+            default: 'PARENT', // PARENT, EDUCATEUR
         },
         createdAt: {
             type: 'timestamp',

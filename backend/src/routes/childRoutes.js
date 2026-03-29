@@ -18,24 +18,24 @@ router.use(protect); // All child routes need protection
 
 router
     .route('/')
-    .post(authorize('PARENT', 'ADMIN'), createChild)
+    .post(authorize('PARENT'), createChild)
     .get(getChildren);
 
 router
     .route('/:id')
     .get(getChildById)
     .put(updateChild)
-    .delete(authorize('PARENT', 'ADMIN'), deleteChild);
+    .delete(authorize('PARENT'), deleteChild);
 
 // Lesson assignment routes
 router
     .route('/:id/lessons')
     .get(getChildLessons)
-    .post(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), assignLesson);
+    .post(authorize('PARENT', 'EDUCATEUR'), assignLesson);
 
 router
     .route('/:id/lessons/:lessonId')
-    .delete(authorize('PARENT', 'EDUCATEUR', 'ADMIN'), removeLesson);
+    .delete(authorize('PARENT', 'EDUCATEUR'), removeLesson);
 
 router
     .route('/:id/courses')
