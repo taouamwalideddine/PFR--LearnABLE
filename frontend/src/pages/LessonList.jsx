@@ -18,10 +18,10 @@ const LessonList = () => {
             setLoading(true);
             let response;
             if (activeChild) {
-                // If a child is active, fetch only their assigned lessons
+                // child assigned lessons
                 response = await api.get(`/children/${activeChild.id}/lessons`);
             } else {
-                // Otherwise fetch all lessons for the educator/parent
+                // adult all lessons
                 response = await api.get('/lessons');
             }
             setLessons(response.data);
@@ -34,7 +34,7 @@ const LessonList = () => {
 
     if (loading) return <div className="p-8 text-center">Loading lessons...</div>;
 
-    // STUDENT VIEW
+    // student view
     if (activeChild) {
         return (
             <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -85,7 +85,7 @@ const LessonList = () => {
         );
     }
 
-    // PARENT / EDUCATOR VIEW
+    // adult view
     return (
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">

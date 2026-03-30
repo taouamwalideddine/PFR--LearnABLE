@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: learnable-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1111
+      POSTGRES_DB: learnAble_db
+    ports:
+      # Expose DB to host so you can still view it in pgAdmin/DBeaver on localhost:5432
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: learnable-backend
+    ports:
+      - "5000:5000"
+    environment:
+      # Override the local DATABASE_URL so it routes to the 'db' container instead of 'localhost'
+      - DATABASE_URL=postgresql://postgres:1111@db:5432/learnAble_db?schema=public
+      - JWT_SECRET=your_super_secret_jwt_key_here
+      - PORT=5000
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      # Create an anonymous volume for node_modules so local Windows modules don't override Linux modules
+      - /app/node_modules
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: learnable-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Vite forwards requests to the backend mapped back to the host machine for the browser
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      # Prevent node_modules pollution
+      - /app/node_modules
+
+volumes:
+  postgres_data:

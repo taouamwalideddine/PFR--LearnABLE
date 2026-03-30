@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Get all rewards for a child
-// @route   GET /api/rewards/child/:childId
-// @access  Private
+// @desc get all rewards for a child
 const getChildRewards = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Reward');

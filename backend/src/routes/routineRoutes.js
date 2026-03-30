@@ -19,7 +19,7 @@ router.get('/', getRoutines);
 router.get('/child/:childId', getChildRoutines);
 router.get('/:id', getRoutineById);
 
-// Only authorized adults can build routines
+
 router.post('/', authorize('PARENT', 'EDUCATEUR'), createRoutine);
 router.post('/:id/assign', authorize('PARENT', 'EDUCATEUR'), assignRoutine);
 router.post('/:id/steps', authorize('PARENT', 'EDUCATEUR'), addRoutineStep);

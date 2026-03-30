@@ -14,7 +14,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.use(protect); // All child routes need protection
+router.use(protect);
 
 router
     .route('/')
@@ -27,7 +27,7 @@ router
     .put(updateChild)
     .delete(authorize('PARENT'), deleteChild);
 
-// Lesson assignment routes
+
 router
     .route('/:id/lessons')
     .get(getChildLessons)

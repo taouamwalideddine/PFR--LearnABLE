@@ -21,10 +21,10 @@ const Sidebar = () => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
 
-    // Don't show sidebar on login/register pages
+    // hide on auth pages
     if (['/login', '/register'].includes(location.pathname)) return null;
 
-    // If a child is actively playing, they get a completely different full-screen UI, so hide this sidebar.
+    // hide during child gameplay
     if (activeChild) {
         return (
             <div className="fixed top-4 right-4 z-50">

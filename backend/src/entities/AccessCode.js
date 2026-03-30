@@ -17,11 +17,11 @@ module.exports = new EntitySchema({
             type: 'uuid',
         },
         parentId: {
-            type: 'uuid', // The parent who generated this code
+            type: 'uuid', 
         },
         redeemedBy: {
             type: 'uuid',
-            nullable: true, // The educator who redeemed it
+            nullable: true, 
         },
         expiresAt: {
             type: 'timestamp',

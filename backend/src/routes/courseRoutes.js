@@ -11,12 +11,12 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.use(protect); // All routes require authentication
+router.use(protect);
 
 router.get('/', getCourses);
 router.get('/:id', getCourseById);
 
-// Educator/Admin/Parent routes
+
 router.post('/', authorize('EDUCATEUR', 'PARENT'), createCourse);
 router.put('/:id', authorize('EDUCATEUR', 'PARENT'), updateCourse);
 router.delete('/:id', authorize('EDUCATEUR', 'PARENT'), deleteCourse);

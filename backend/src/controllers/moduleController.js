@@ -1,5 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
+// @desc create module
 const createModule = async (req, res) => {
     const { title, description, orderIndex, courseId } = req.body;
     try {
@@ -13,6 +14,7 @@ const createModule = async (req, res) => {
     }
 };
 
+// @desc update module info
 const updateModule = async (req, res) => {
     const { title, description, orderIndex } = req.body;
     try {
@@ -32,6 +34,7 @@ const updateModule = async (req, res) => {
     }
 };
 
+// @desc delete module
 const deleteModule = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Module');

@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Create a new lesson
-// @route   POST /api/lessons
-// @access  Private (Educator/Admin)
+// @desc create a new lesson
 const createLesson = async (req, res) => {
     const { title, category, description, difficulty, moduleId, orderIndex } = req.body;
 
@@ -25,9 +23,7 @@ const createLesson = async (req, res) => {
     }
 };
 
-// @desc    Get all lessons
-// @route   GET /api/lessons
-// @access  Private
+// @desc get all lessons
 const getLessons = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Lesson');
@@ -41,9 +37,7 @@ const getLessons = async (req, res) => {
     }
 };
 
-// @desc    Get lesson by ID
-// @route   GET /api/lessons/:id
-// @access  Private
+// @desc get lesson by ID
 const getLessonById = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Lesson');
@@ -63,9 +57,7 @@ const getLessonById = async (req, res) => {
     }
 };
 
-// @desc    Update lesson
-// @route   PUT /api/lessons/:id
-// @access  Private (Educator/Admin)
+// @desc update lesson info
 const updateLesson = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Lesson');
@@ -78,9 +70,7 @@ const updateLesson = async (req, res) => {
     }
 };
 
-// @desc    Assign lesson to child
-// @route   POST /api/lessons/:id/assign
-// @access  Private (Parent/Educator/Admin)
+// @desc assign lesson to child
 const assignLesson = async (req, res) => {
     const { childId } = req.body;
     try {
@@ -111,9 +101,7 @@ const assignLesson = async (req, res) => {
     }
 };
 
-// @desc    Delete a lesson
-// @route   DELETE /api/lessons/:id
-// @access  Private (Educator/Admin)
+// @desc delete a lesson
 const deleteLesson = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Lesson');
@@ -132,27 +120,22 @@ const deleteLesson = async (req, res) => {
 
         const activityIds = lesson.activities?.map(a => a.id) || [];
 
-        // 1. Clear Lesson-Child Junction Table (child_lessons) using raw SQL
         console.log(`[NUCLEAR DELETE] Clearing child_lessons junction for lesson: ${lesson.id}`);
         await AppDataSource.query(`DELETE FROM child_lessons WHERE "lessonId" = $1`, [lesson.id]);
 
-        // 2. Delete Progress records for activities in this lesson
         if (activityIds.length > 0) {
             await progressRepo.delete({ activityId: require('typeorm').In(activityIds) });
         }
 
-        // 3. Nullify RoutineStep links
         await routineStepRepo.update(
             { linkedLessonId: lesson.id },
             { linkedLessonId: null, type: 'CUSTOM' }
         );
 
-        // 4. Delete Activities
         if (activityIds.length > 0) {
             await activityRepo.delete({ id: require('typeorm').In(activityIds) });
         }
 
-        // 5. Finally, delete the lesson itself
         await repo.delete(lesson.id);
 
         res.json({ message: 'Lesson and all related data removed successfully' });

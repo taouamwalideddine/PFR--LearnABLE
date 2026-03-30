@@ -21,10 +21,7 @@ const RoutineDetail = () => {
 
     const fetchRoutine = async () => {
         try {
-            // Find all routines for this child (we don't have a direct GET /routines/:id without finding the child first, wait we can just create a custom fetch or filter)
-            // Wait, we don't have GET /routines/:id yet. I'll need to fetch all children's routines or create that endpoint!
-            // For now, I'll fetch `/routines/child/:childId`? But I don't know the child ID.
-            // Let's assume I will add `GET /routines/:id` to backend quickly.
+            // fetch routines
             setLoading(true);
             const res = await api.get(`/routines/${id}`);
             // sort steps

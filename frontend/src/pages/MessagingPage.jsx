@@ -34,7 +34,7 @@ const MessagingPage = () => {
             setMessages(msgRes.data);
             setChild(childRes.data);
 
-            // Extract unique contacts
+            // extract contacts
             const contactMap = {};
             msgRes.data.forEach(m => {
                 if (m.senderId !== user.id) {
@@ -50,7 +50,7 @@ const MessagingPage = () => {
                 setSelectedContact(contactList[0].id);
             }
 
-            // Also fetch educators/parents linked to this child
+            // fetch linked adults
             if (user.role === 'PARENT') {
                 const linkRes = await api.get(`/access-codes/links/${childId}`);
                 linkRes.data.forEach(l => {
@@ -65,7 +65,7 @@ const MessagingPage = () => {
                 }
             }
 
-            // Mark as read
+            // mark read
             await api.patch(`/messages/read/${childId}`);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }

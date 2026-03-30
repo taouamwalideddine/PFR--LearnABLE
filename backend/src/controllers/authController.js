@@ -2,9 +2,7 @@ const bcrypt = require('bcryptjs');
 const AppDataSource = require('../config/data-source');
 const generateToken = require('../utils/generateToken');
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+// @desc register a new user
 const registerUser = async (req, res) => {
     const { email, password, role } = req.body;
 
@@ -43,9 +41,7 @@ const registerUser = async (req, res) => {
     }
 };
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
-// @access  Public
+// @desc authenticate user and get token
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
 

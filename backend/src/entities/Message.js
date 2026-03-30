@@ -19,7 +19,7 @@ module.exports = new EntitySchema({
             type: 'uuid',
         },
         childId: {
-            type: 'uuid', // Messages are grouped per-child context
+            type: 'uuid', 
         },
         readAt: {
             type: 'timestamp',

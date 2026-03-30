@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Get all routines for a specific child
-// @route   GET /api/routines/child/:childId
-// @access  Private
+// @desc get all routines for a specific child
 const getChildRoutines = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -14,7 +12,6 @@ const getChildRoutines = async (req, res) => {
         if (!child) return res.status(404).json({ message: 'Child not found' });
 
         const routines = child.routines || [];
-        // Sort steps inside each routine by orderIndex
         routines.forEach(r => {
             if (r.steps) {
                 r.steps.sort((a, b) => a.orderIndex - b.orderIndex);
@@ -28,9 +25,7 @@ const getChildRoutines = async (req, res) => {
     }
 };
 
-// @desc    Get all routines managed by adult
-// @route   GET /api/routines
-// @access  Private
+// @desc get all routines managed by adult
 const getRoutines = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Routine');
@@ -46,9 +41,7 @@ const getRoutines = async (req, res) => {
     }
 };
 
-// @desc    Create a new routine
-// @route   POST /api/routines
-// @access  Private
+// @desc create a new routine
 const createRoutine = async (req, res) => {
     const { title, description, category, isActive } = req.body;
     try {
@@ -69,9 +62,7 @@ const createRoutine = async (req, res) => {
     }
 };
 
-// @desc    Get routine by ID
-// @route   GET /api/routines/:id
-// @access  Private
+// @desc get routine by ID
 const getRoutineById = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Routine');
@@ -88,9 +79,7 @@ const getRoutineById = async (req, res) => {
     }
 };
 
-// @desc    Add a step to a routine
-// @route   POST /api/routines/:id/steps
-// @access  Private
+// @desc add a step to a routine
 const addRoutineStep = async (req, res) => {
     const { title, description, imageUrl, durationMinutes, orderIndex, type, linkedLessonId } = req.body;
     try {
@@ -119,9 +108,7 @@ const addRoutineStep = async (req, res) => {
     }
 };
 
-// @desc    Delete routine
-// @route   DELETE /api/routines/:id
-// @access  Private
+// @desc delete routine
 const deleteRoutine = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Routine');
@@ -133,9 +120,7 @@ const deleteRoutine = async (req, res) => {
     }
 };
 
-// @desc    Delete routine step
-// @route   DELETE /api/routines/steps/:stepId
-// @access  Private
+// @desc delete routine step
 const deleteRoutineStep = async (req, res) => {
     try {
         const stepRepo = AppDataSource.getRepository('RoutineStep');
@@ -147,9 +132,7 @@ const deleteRoutineStep = async (req, res) => {
     }
 };
 
-// @desc    Assign routine to child
-// @route   POST /api/routines/:id/assign
-// @access  Private
+// @desc assign routine to child
 const assignRoutine = async (req, res) => {
     const { childId } = req.body;
     try {

@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Create activity for a lesson
-// @route   POST /api/activities
-// @access  Private (Educator/Admin)
+// @desc create activity for a lesson
 const createActivity = async (req, res) => {
     const { title, type, content, lessonId } = req.body;
 
@@ -23,9 +21,7 @@ const createActivity = async (req, res) => {
     }
 };
 
-// @desc    Get activities for a lesson
-// @route   GET /api/activities/lesson/:lessonId
-// @access  Private
+// @desc get activities for a lesson
 const getActivitiesByLesson = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Activity');
@@ -39,9 +35,7 @@ const getActivitiesByLesson = async (req, res) => {
     }
 };
 
-// @desc    Submit activity progress
-// @route   POST /api/activities/:id/progress
-// @access  Private (Child/Parent/Educator)
+// @desc submit activity progress
 const submitProgress = async (req, res) => {
     const { childId, completed, successRate, timeSpent } = req.body;
 
@@ -57,7 +51,6 @@ const submitProgress = async (req, res) => {
 
         const progress = await progressRepo.save(newProgress);
 
-        // Handle rewards if completion is successful
         if (completed && successRate >= 80) {
             const rewardRepo = AppDataSource.getRepository('Reward');
             const newReward = rewardRepo.create({
@@ -76,9 +69,7 @@ const submitProgress = async (req, res) => {
     }
 };
 
-// @desc    Update activity
-// @route   PUT /api/activities/:id
-// @access  Private (Educator/Admin)
+// @desc update activity
 const updateActivity = async (req, res) => {
     const { title, type, content } = req.body;
 
@@ -102,9 +93,7 @@ const updateActivity = async (req, res) => {
     }
 };
 
-// @desc    Delete activity
-// @route   DELETE /api/activities/:id
-// @access  Private (Educator/Admin)
+// @desc delete activity
 const deleteActivity = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Activity');
@@ -116,7 +105,6 @@ const deleteActivity = async (req, res) => {
             return res.status(404).json({ message: 'Activity not found' });
         }
 
-        // Clear associated progress records to avoid FK constraint violations
         await progressRepo.delete({ activityId: activity.id });
 
         await repo.remove(activity);

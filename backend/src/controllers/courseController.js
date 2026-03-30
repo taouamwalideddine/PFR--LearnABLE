@@ -1,6 +1,7 @@
 const { In } = require('typeorm');
 const AppDataSource = require('../config/data-source');
 
+// @desc create course
 const createCourse = async (req, res) => {
     const { title, description, category, bannerUrl } = req.body;
     try {
@@ -14,6 +15,7 @@ const createCourse = async (req, res) => {
     }
 };
 
+// @desc get all courses
 const getCourses = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Course');
@@ -28,6 +30,7 @@ const getCourses = async (req, res) => {
     }
 };
 
+// @desc get course details
 const getCourseById = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Course');
@@ -36,8 +39,7 @@ const getCourseById = async (req, res) => {
             relations: ['modules', 'modules.lessons', 'children']
         });
         if (!course) return res.status(404).json({ message: 'Course not found' });
-        
-        // Sort modules and lessons
+
         if (course.modules) {
             course.modules.sort((a, b) => a.orderIndex - b.orderIndex);
             course.modules.forEach(mod => {
@@ -51,6 +53,7 @@ const getCourseById = async (req, res) => {
     }
 };
 
+// @desc update course info
 const updateCourse = async (req, res) => {
     const { title, description, category, bannerUrl } = req.body;
     try {
@@ -71,6 +74,7 @@ const updateCourse = async (req, res) => {
     }
 };
 
+// @desc delete course and completely wipe references
 const deleteCourse = async (req, res) => {
     const courseId = req.params.id;
     console.log(`[NUCLEAR DELETE] Initiating for course: ${courseId}`);
@@ -83,9 +87,6 @@ const deleteCourse = async (req, res) => {
         const routineStepRepo = AppDataSource.getRepository('RoutineStep');
         const courseRepo = AppDataSource.getRepository('Course');
 
-        // Bypassing TypeORM's complex joins (tablePath bug) with manual ID fetching
-        
-        // 1. Get Module IDs
         const modules = await moduleRepo.find({ where: { courseId: courseId } });
         const moduleIds = modules.map(m => m.id);
         
@@ -103,30 +104,25 @@ const deleteCourse = async (req, res) => {
 
         console.log(`[NUCLEAR DELETE] IDs collected - Modules: ${moduleIds.length}, Lessons: ${lessonIds.length}, Activities: ${activityIds.length}`);
 
-        // 2. Clear Junction Tables with Raw SQL (Bypasses all TypeORM relation logic)
         console.log('[NUCLEAR DELETE] Clearing child_courses junction...');
         await AppDataSource.query(`DELETE FROM child_courses WHERE "courseId" = $1`, [courseId]);
 
         if (lessonIds.length > 0) {
             console.log('[NUCLEAR DELETE] Clearing child_lessons junction...');
-            // Need to handle multiple IDs in Raw SQL
             const lessonPlaceholder = lessonIds.map((_, i) => `$${i + 1}`).join(',');
             await AppDataSource.query(`DELETE FROM child_lessons WHERE "lessonId" IN (${lessonPlaceholder})`, lessonIds);
         }
 
-        // 3. Clear Dependent Progress Records
         if (activityIds.length > 0) {
             console.log('[NUCLEAR DELETE] Deleting progress records...');
             await progressRepo.delete({ activityId: In(activityIds) });
         }
 
-        // 4. Nullify Routine Steps
         if (lessonIds.length > 0) {
             console.log('[NUCLEAR DELETE] Unlinking routine steps...');
             await routineStepRepo.update({ linkedLessonId: In(lessonIds) }, { linkedLessonId: null, type: 'CUSTOM' });
         }
 
-        // 5. Delete Core Entities in order
         if (activityIds.length > 0) {
             console.log('[NUCLEAR DELETE] Deleting activities...');
             await activityRepo.delete({ id: In(activityIds) });
@@ -157,6 +153,7 @@ const deleteCourse = async (req, res) => {
     }
 };
 
+// @desc assign course to student
 const assignCourse = async (req, res) => {
     try {
         const courseRepo = AppDataSource.getRepository('Course');
@@ -166,7 +163,7 @@ const assignCourse = async (req, res) => {
         });
         const child = await childRepo.findOne({ 
             where: { id: req.body.childId },
-            relations: ['courses'] // Child is the owner of the relation
+            relations: ['courses']
         });
         
         if (!course || !child) return res.status(404).json({ message: 'Course or Child not found' });
@@ -175,7 +172,6 @@ const assignCourse = async (req, res) => {
             child.courses = [];
         }
 
-        // Prevent duplicate assignment
         if (!child.courses.some(c => c.id === course.id)) {
             child.courses.push(course);
             await childRepo.save(child);

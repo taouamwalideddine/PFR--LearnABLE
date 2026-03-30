@@ -11,7 +11,6 @@ module.exports = new EntitySchema({
         },
         title: {
             type: 'varchar',
-            // e.g. "Morning Routine", "Bedtime", "School Day"
         },
         description: {
             type: 'text',
@@ -19,14 +18,14 @@ module.exports = new EntitySchema({
         },
         category: {
             type: 'varchar',
-            default: 'DAILY', // DAILY, SPECIAL_EVENT, WEEKEND
+            default: 'DAILY',
         },
         creatorId: {
-            type: 'uuid', // The parent or educator who made it
+            type: 'uuid', //parent/educator
         },
         isActive: {
             type: 'boolean',
-            default: false, // Is this routine currently assigned to today?
+            default: false, //is assigned and active
         },
         createdAt: {
             type: 'timestamp',

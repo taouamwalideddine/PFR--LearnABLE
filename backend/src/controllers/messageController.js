@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc   Send a message
-// @route  POST /api/messages
-// @access Private
+// @desc send a message
 const sendMessage = async (req, res) => {
     try {
         const { receiverId, childId, content } = req.body;
@@ -21,9 +19,7 @@ const sendMessage = async (req, res) => {
     }
 };
 
-// @desc   Get message thread for a child between current user and another user
-// @route  GET /api/messages/child/:childId
-// @access Private
+// @desc get message thread for a child between current user and another user
 const getMessages = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Message');
@@ -33,7 +29,6 @@ const getMessages = async (req, res) => {
             order: { createdAt: 'ASC' },
         });
 
-        // Filter to only messages involving the current user
         const filtered = messages.filter(
             m => m.senderId === req.user.id || m.receiverId === req.user.id
         );
@@ -54,9 +49,7 @@ const getMessages = async (req, res) => {
     }
 };
 
-// @desc   Mark messages as read
-// @route  PATCH /api/messages/read/:childId
-// @access Private
+// @desc mark messages as read
 const markAsRead = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Message');

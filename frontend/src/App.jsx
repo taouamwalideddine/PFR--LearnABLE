@@ -25,7 +25,7 @@ import MyStudents from './pages/MyStudents';
 import CommunityForum from './pages/CommunityForum';
 import Sidebar from './components/Sidebar';
 
-// A component to intelligently route between dashboards based on activeChild
+// routing logic
 const DashboardRouter = () => {
     const { activeChild } = useAuth();
     if (activeChild) {

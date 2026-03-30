@@ -21,7 +21,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// routes
 app.use('/api/auth', authRoutes);
 app.use('/api/children', childRoutes);
 app.use('/api/lessons', lessonRoutes);
@@ -41,13 +41,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'LearnAble API is running' });
 });
 
-AppDataSource.initialize()
-  .then(() => {
-    console.log('PostgreSQL Database connected via TypeORM');
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+if (process.env.NODE_ENV !== 'test') {
+  AppDataSource.initialize()
+    .then(() => {
+      console.log('PostgreSQL Database connected via TypeORM');
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    })
+    .catch((error) => {
+      console.error('Error connecting to PostgreSQL datababse:', error);
     });
-  })
-  .catch((error) => {
-    console.error('Error connecting to PostgreSQL datababse:', error);
-  });
+}
+
+module.exports = app;

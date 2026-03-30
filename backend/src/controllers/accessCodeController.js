@@ -14,9 +14,7 @@ const generateCode = async (req, res) => {
             return res.status(403).json({ message: 'Only the parent who owns this profile can generate codes' });
         }
 
-        // Generate a 6-character alphanumeric code
         const code = crypto.randomBytes(3).toString('hex').toUpperCase();
-        // Expires in 24 hours
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         const accessCode = codeRepo.create({
@@ -35,7 +33,6 @@ const generateCode = async (req, res) => {
 };
 
 // @desc    code redeeming for educators to link to a student
-// @route   POST /api/access-codes/redeem
 const redeemCode = async (req, res) => {
     try {
         const { code } = req.body;
@@ -49,20 +46,17 @@ const redeemCode = async (req, res) => {
             return res.status(400).json({ message: 'Code has expired' });
         }
 
-        // check if existing
         const existing = await linkRepo.findOne({
             where: { educatorId: req.user.id, childId: accessCode.childId },
         });
         if (existing) return res.status(400).json({ message: 'You already have access to this student' });
 
-        // create the educator-child link
         const link = linkRepo.create({
             educatorId: req.user.id,
             childId: accessCode.childId,
         });
         await linkRepo.save(link);
 
-        // Mark code as used
         accessCode.isUsed = true;
         accessCode.redeemedBy = req.user.id;
         await codeRepo.save(accessCode);
@@ -78,7 +72,6 @@ const redeemCode = async (req, res) => {
 };
 
 // @desc show linked educators 
-// @route   GET /api/access-codes/links/:childId
 const getChildLinks = async (req, res) => {
     try {
         const linkRepo = AppDataSource.getRepository('EducatorChild');
@@ -99,7 +92,6 @@ const getChildLinks = async (req, res) => {
 };
 
 // @desc    remove access
-// @route   DELETE /api/access-codes/links/:linkId
 const revokeAccess = async (req, res) => {
     try {
         const linkRepo = AppDataSource.getRepository('EducatorChild');
@@ -115,8 +107,6 @@ const revokeAccess = async (req, res) => {
 };
 
 // @desc    Get all students linked to the logged-in educator
-// @route   GET /api/access-codes/my-students
-// @access  Private (EDUCATEUR)
 const getMyStudents = async (req, res) => {
     try {
         const linkRepo = AppDataSource.getRepository('EducatorChild');

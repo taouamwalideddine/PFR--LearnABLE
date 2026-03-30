@@ -1,18 +1,13 @@
 const AppDataSource = require('../config/data-source');
 
-// Helper: check if the user is authorized to access a child
-// Returns true for: the parent (owner), a linked educator, or an admin
 const isAuthorizedForChild = async (userId, userRole, childId) => {
-    // ADMIN bypass removed
 
     const childRepo = AppDataSource.getRepository('Child');
     const child = await childRepo.findOneBy({ id: childId });
     if (!child) return false;
 
-    // Parent owns this child
     if (child.parentId === userId) return true;
 
-    // Educator is linked via access code
     if (userRole === 'EDUCATEUR') {
         const linkRepo = AppDataSource.getRepository('EducatorChild');
         const link = await linkRepo.findOne({
@@ -24,9 +19,7 @@ const isAuthorizedForChild = async (userId, userRole, childId) => {
     return false;
 };
 
-// @desc    Create a new child profile
-// @route   POST /api/children
-// @access  Private (Parent/Admin)
+// @desc create a new child profile
 const createChild = async (req, res) => {
     const { name, age, learningPace, difficultyLevel } = req.body;
 
@@ -48,13 +41,9 @@ const createChild = async (req, res) => {
     }
 };
 
-// @desc    Get all children for the logged in user
-// @route   GET /api/children
-// @access  Private
 const getChildren = async (req, res) => {
     try {
         if (req.user.role === 'EDUCATEUR') {
-            // Educators see students linked via access codes
             const linkRepo = AppDataSource.getRepository('EducatorChild');
             const links = await linkRepo.find({
                 where: { educatorId: req.user.id },
@@ -74,9 +63,7 @@ const getChildren = async (req, res) => {
     }
 };
 
-// @desc    Get single child profile
-// @route   GET /api/children/:id
-// @access  Private
+// @desc get single child profile
 const getChildById = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -98,9 +85,7 @@ const getChildById = async (req, res) => {
     }
 };
 
-// @desc    Update child profile
-// @route   PUT /api/children/:id
-// @access  Private (Parent only — educators can view but not edit)
+// @desc update child profile
 const updateChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -124,9 +109,7 @@ const updateChild = async (req, res) => {
     }
 };
 
-// @desc    Get all lessons assigned to a child
-// @route   GET /api/children/:id/lessons
-// @access  Private
+// @desc get all lessons assigned to a child
 const getChildLessons = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -151,9 +134,7 @@ const getChildLessons = async (req, res) => {
     }
 };
 
-// @desc    Get all courses assigned to a child
-// @route   GET /api/children/:id/courses
-// @access  Private
+// @desc get all courses assigned to a child
 const getChildCourses = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -187,9 +168,7 @@ const getChildCourses = async (req, res) => {
     }
 };
 
-// @desc    Assign a lesson to a child
-// @route   POST /api/children/:id/lessons
-// @access  Private
+// @desc assign a lesson to a child
 const assignLesson = async (req, res) => {
     const { lessonId } = req.body;
     try {
@@ -226,9 +205,7 @@ const assignLesson = async (req, res) => {
     }
 };
 
-// @desc    Remove a lesson from a child
-// @route   DELETE /api/children/:id/lessons/:lessonId
-// @access  Private
+// @desc remove a lesson from a child
 const removeLesson = async (req, res) => {
     const { id, lessonId } = req.params;
     try {
@@ -256,9 +233,7 @@ const removeLesson = async (req, res) => {
     }
 };
 
-// @desc    Delete a child profile
-// @route   DELETE /api/children/:id
-// @access  Private (Parent)
+// @desc delete a child profile
 const deleteChild = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Child');
@@ -272,13 +247,11 @@ const deleteChild = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // Clear many-to-many junction tables
         child.lessons = [];
         child.courses = [];
         if (child.routines) child.routines = [];
         await repo.save(child);
 
-        // Clear FK references in other tables
         await AppDataSource.getRepository('Progress').delete({ childId: req.params.id });
         await AppDataSource.getRepository('Reward').delete({ childId: req.params.id });
         await AppDataSource.getRepository('AccessCode').delete({ childId: req.params.id });

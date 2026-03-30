@@ -12,12 +12,10 @@ async function testQuery() {
     try {
         await client.connect();
 
-        // Check 'users' table (TypeORM generated)
         const resUsers = await client.query('SELECT * FROM users');
         console.log('--- Table: users ---');
         console.log(resUsers.rows);
 
-        // Check 'User' table (Prisma generated)
         const resUser = await client.query('SELECT * FROM "User"');
         console.log('\n--- Table: User ---');
         console.log(resUser.rows);

@@ -1,7 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Create a post
-// @route   POST /api/forum/posts
+// @desc create a post
 const createPost = async (req, res) => {
     try {
         const { title, content, category } = req.body;
@@ -15,8 +14,7 @@ const createPost = async (req, res) => {
     }
 };
 
-// @desc    Get all posts (with comment count)
-// @route   GET /api/forum/posts
+// @desc get all posts
 const getPosts = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Post');
@@ -41,8 +39,7 @@ const getPosts = async (req, res) => {
     }
 };
 
-// @desc    Get single post with comments
-// @route   GET /api/forum/posts/:id
+// @desc get single post with comments
 const getPostById = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Post');
@@ -71,8 +68,7 @@ const getPostById = async (req, res) => {
     }
 };
 
-// @desc    Delete a post (author)
-// @route   DELETE /api/forum/posts/:id
+// @desc delete a post
 const deletePost = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Post');
@@ -91,8 +87,7 @@ const deletePost = async (req, res) => {
     }
 };
 
-// @desc    Add a comment to a post
-// @route   POST /api/forum/posts/:id/comments
+// @desc add a comment to a post
 const addComment = async (req, res) => {
     try {
         const { content } = req.body;
@@ -106,8 +101,7 @@ const addComment = async (req, res) => {
     }
 };
 
-// @desc    Delete a comment (author)
-// @route   DELETE /api/forum/comments/:id
+// @desc delete a comment
 const deleteComment = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Comment');

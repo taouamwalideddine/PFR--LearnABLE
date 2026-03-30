@@ -1,8 +1,6 @@
 const AppDataSource = require('../config/data-source');
 
-// @desc    Get progress for a specific child
-// @route   GET /api/progress/child/:childId
-// @access  Private
+// @desc get progress for a specific child
 const getChildProgress = async (req, res) => {
     try {
         const repo = AppDataSource.getRepository('Progress');
@@ -18,15 +16,12 @@ const getChildProgress = async (req, res) => {
     }
 };
 
-// @desc    Get aggregate stats for a child
-// @route   GET /api/progress/stats/:childId
-// @access  Private
+// @desc get aggregate stats for a child
 const getChildStats = async (req, res) => {
     try {
         const childId = req.params.childId;
         const repo = AppDataSource.getRepository('Progress');
 
-        // Total time spent (sum of timeSpent), count, and average success rate
         const timeAggregation = await repo
             .createQueryBuilder('progress')
             .select('COUNT(progress.id)', 'count')
@@ -35,7 +30,6 @@ const getChildStats = async (req, res) => {
             .where('progress.childId = :childId', { childId })
             .getRawOne();
 
-        // Activities completed
         const completedCount = await repo.count({
             where: { childId, completed: true },
         });
@@ -53,9 +47,7 @@ const getChildStats = async (req, res) => {
     }
 };
 
-// @desc    Get classroom-wide analytics for all children belonging to the logged-in user
-// @route   GET /api/progress/classroom
-// @access  Private (Parent/Educator/Admin)
+// @desc get classroom-wide analytics for logs
 const getClassroomAnalytics = async (req, res) => {
     try {
         const childRepo = AppDataSource.getRepository('Child');
@@ -64,7 +56,6 @@ const getClassroomAnalytics = async (req, res) => {
         let children = [];
 
         if (req.user.role === 'EDUCATEUR') {
-            // Educators see students linked via access codes
             const linkRepo = AppDataSource.getRepository('EducatorChild');
             const links = await linkRepo.find({
                 where: { educatorId: req.user.id },
@@ -72,7 +63,6 @@ const getClassroomAnalytics = async (req, res) => {
             });
             children = links.map(l => l.child).filter(Boolean);
         } else {
-            // Parents/Admins see children they own
             children = await childRepo.find({
                 where: { parentId: req.user.id },
             });
@@ -107,9 +97,7 @@ const getClassroomAnalytics = async (req, res) => {
     }
 };
 
-// @desc    Get success rate broken down by lesson category for a child
-// @route   GET /api/progress/categories/:childId
-// @access  Private
+// @desc get success rate broken down by lesson category for a child
 const getCategoryBreakdown = async (req, res) => {
     try {
         const progressRepo = AppDataSource.getRepository('Progress');

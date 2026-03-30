@@ -14,12 +14,12 @@ const LessonDetail = () => {
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Parent state
+    // adult state
     const [previewActivity, setPreviewActivity] = useState(null);
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [editingActivity, setEditingActivity] = useState(null);
     
-    // Child state
+    // child state
     const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
     const [lessonCompleted, setLessonCompleted] = useState(false);
 
@@ -64,7 +64,7 @@ const LessonDetail = () => {
 
     if (loading || !lesson) return <div className="p-8 text-center flex-1 flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
 
-    // ----- STUDENT VIEW (IMMERSIVE PLAYER) -----
+    // immersive player
     if (activeChild) {
         if (!lesson.activities || lesson.activities.length === 0) {
             return (
@@ -138,7 +138,7 @@ const LessonDetail = () => {
         );
     }
 
-    // ----- PARENT / EDUCATOR VIEW (BUILDER) -----
+    // builder ui
     return (
         <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
             <Link to="/lessons" className="flex items-center text-slate-500 hover:text-indigo-600 mb-8 transition font-bold w-max">
